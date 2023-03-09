@@ -1,5 +1,8 @@
 from BEM import BEM
 import numpy as np
+from helper_functions import Helper
+import matplotlib.pyplot as plt
+helper = Helper()
 
 do = {
     "a": True,
@@ -18,8 +21,12 @@ if do["a"]:
                       n_blades=3,
                       air_density=1.225)
     results = bem.solve(wind_speed=10, tip_speed_ratio=8, pitch=np.radians(2))
-    print(results["a"])
-    print(results["a_prime"])
+    fig, ax = plt.subplots()
+    ax.plot(results["positions"][:-2], results["a"][:-2], label="a")
+    ax.plot(results["positions"][:-2], results["a_prime"][:-2], label="a'")
+    helper.handle_axis(ax, legend=True, grid=True, x_label="radius in m", font_size=15, line_width=3)
+    plt.show()
+
 
     pitch_deg = -2                      # pitch in degrees
     pitch = np.radians(pitch_deg)       # pitch angle in radian
