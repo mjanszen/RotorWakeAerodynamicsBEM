@@ -1,4 +1,5 @@
 from BEM import BEM
+import numpy as np
 
 do = {
     "a": False,
@@ -23,7 +24,12 @@ if do["a"]:
     yaw_angles = np.radians([0,15,30])  # yaw angles to be calculated in radians
     v_0 = 10                            # [m] Wind speed
     tsr = [6,8,10]                      # Tip speed ratios  to be calculated
-    pass
+
+    # Calc omega
+    # calc the Cl Cd
+    # Calc Cn, Ct
+    # calc prandtl correction
+    # update a 
 
 if do["b"]:
     pass
