@@ -46,7 +46,7 @@ class BEM:
         :return:
         """
         results = {
-            "r": np.linspace(0.2*self.rotor_radius, self.rotor_radius, resolution),
+            "positions": np.linspace(0.2*self.rotor_radius, self.rotor_radius, resolution),
             "a": list(),
             "a_prime": list(),
             "f_n": list(),
