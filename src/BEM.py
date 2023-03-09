@@ -21,13 +21,38 @@ class BEM:
         self.interp = {"c_l": interpolate.interp1d(df_tmp["alpha"], df_tmp["c_l"]),
                        "c_d": interpolate.interp1d(df_tmp["alpha"], df_tmp["c_l"])}
 
-
     def set_constants(self,
                       rotor_radius: float,
                       n_blades: int,
                       air_density: float) -> None:
         self._set(**{param: value for param, value in locals().items() if param != "self"})
         return None
+
+    def solve(self,
+              wind_speed: float,
+              tip_speed_ratio: float,
+              pitch: float,
+              resolution: int=30):
+        """
+        All angles must be in rad
+        :param wind_speed:
+        :param tip_speed_ratio:
+        :param pitch:
+        :param resolution:
+        :return:
+        """
+        results = {
+            "r": np.linspace(0.2*self.rotor_radius, self.rotor_radius, resolution),
+            "a": list(),
+            "a_prime": list(),
+            "f_n": list(),
+            "f_t": list()
+        }
+        for r in np.linspace(0.2*self.rotor_radius, self.rotor_radius, resolution):
+            twist = self._get_twist(r, self.rotor_radius)
+            chord = self._get_chord(r, self.rotor_radius)
+
+
 
     def _set(self, **kwargs) -> None:
         """
@@ -96,6 +121,8 @@ class BEM:
         if np.sin(np.abs(phi)) < 0.01:
             return 1
         return 2/np.pi*np.arccos(np.exp(-(n_blades*(rotor_radius-r))/(2*r*np.sin(np.abs(phi)))))
+
+
 
     @staticmethod
     def _get_twist(r, r_max):
