@@ -1,12 +1,26 @@
 import numpy as np
 from scipy.optimize import brentq as root, newton
+import pandas as pd
+import scipy.interpolate as interpolate
+from helper_functions import Helper
+helper=Helper()
 
 
 class BEM:
-    def __init__(self):
+    def __init__(self,
+                 root: str,
+                 file_airfoil: str,
+                 save_dir: str):
         self.rotor_radius = None
         self.n_blades = None
         self.air_density = None
+        self.dir_save = save_dir
+        helper.create_dir(self.dir_save)
+
+        df_tmp = pd.read_excel(root+"/"+file_airfoil, skiprows=3)
+        self.interp = {"c_l": interpolate.interp1d(df_tmp["alpha"], df_tmp["c_l"]),
+                       "c_d": interpolate.interp1d(df_tmp["alpha"], df_tmp["c_l"])}
+
 
     def set_constants(self,
                       rotor_radius: float,
@@ -14,23 +28,6 @@ class BEM:
                       air_density: float) -> None:
         self._set(**{param: value for param, value in locals().items() if param != "self"})
         return None
-
-    @staticmethod
-    def _root_axial_induction_factor(phi: float,
-                                     local_solidity: float,
-                                     c_normal: float,
-                                     tip_loss_correction: float,
-                                     bracket: tuple=(-1,1)) -> float:
-        def residue(aif):
-            if aif <= 1/3:
-                return 1/((4*tip_loss_correction*np.sin(phi)**2)/(local_solidity*c_normal)+1)-aif
-            else:
-                return local_solidity*((1-aif)/np.sin(phi))**2*c_normal-4*aif*tip_loss_correction*(1-aif/4*(5-3*aif))
-        try:
-            return root(residue, *bracket)
-        except ValueError:
-            print("Brent could not be used, using Newton.")
-            return newton(residue, 1/3)
 
     def _set(self, **kwargs) -> None:
         """
@@ -99,6 +96,42 @@ class BEM:
         if np.sin(np.abs(phi)) < 0.01:
             return 1
         return 2/np.pi*np.arccos(np.exp(-(n_blades*(rotor_radius-r))/(2*r*np.sin(np.abs(phi)))))
+
+    @staticmethod
+    def _get_twist(r, r_max):
+        """
+            function to get the twist along the blade in radians
+            r: radial position along the blade in [m]
+            r_max: maximum radius of the blade in [m]
+            out: twist in radians
+        """
+        return np.radians(14*(1-r/r_max))
+
+    @staticmethod
+    def _get_chord(r, r_max):
+        """
+            function to calculate chord along the span in m
+            r: radial position along the blade in [m]
+            r_max: maximum radius of the blade in [m]
+        """
+        return 3*(1-r/r_max)+1
+
+    @staticmethod
+    def _root_axial_induction_factor(phi: float,
+                                     local_solidity: float,
+                                     c_normal: float,
+                                     tip_loss_correction: float,
+                                     bracket: tuple=(-1,1)) -> float:
+        def residue(aif):
+            if aif <= 1/3:
+                return 1/((4*tip_loss_correction*np.sin(phi)**2)/(local_solidity*c_normal)+1)-aif
+            else:
+                return local_solidity*((1-aif)/np.sin(phi))**2*c_normal-4*aif*tip_loss_correction*(1-aif/4*(5-3*aif))
+        try:
+            return root(residue, *bracket)
+        except ValueError:
+            print("Brent could not be used, using Newton.")
+            return newton(residue, 1/3)
 
     @staticmethod
     def _tangential_induction_factor(phi: float, local_solidity: float, c_tangent: float, tip_loss_correction: float)\
