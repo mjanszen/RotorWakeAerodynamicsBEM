@@ -6,6 +6,7 @@ helper = Helper()
 
 do = {
     "a": True,
+    "DTU_test": False,
     "b": False,
     "c": False
 }
@@ -39,6 +40,12 @@ if do["a"]:
     # Calc Cn, Ct
     # calc prandtl correction
     # update a
+if do["DTU_test"]:
+    bem.set_constants(rotor_radius=31,
+                      n_blades=3,
+                      air_density=1.225)
+    results = bem.solve(wind_speed=8, tip_speed_ratio=2.61*31/8, pitch=np.deg2rad(-3), resolution=1)
+    print(results)
 
 if do["b"]:
     pass
