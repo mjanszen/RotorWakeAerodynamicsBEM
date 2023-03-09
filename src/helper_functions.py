@@ -2,6 +2,7 @@ import pathlib
 import os
 import shutil
 import matplotlib
+import matplotlib.pyplot
 
 
 class Helper():
@@ -50,23 +51,23 @@ class Helper():
             print(msg)
         return msg, keep_going
 
-    @staticmethod
-    def handle_figure(figure: matplotlib.figure,
-                      file_figure: str=False,
-                      show: bool=False,
-                      size: tuple=(18.5, 10),
-                      inches: int=100,
-                      tight_layout: bool=True,
-                      close: bool=True) -> matplotlib.figure:
-        figure.set_size_inches(size)
-        figure.set_dpi(inches)
-        figure.set_tight_layout(tight_layout)
-        if file_figure:
-            figure.savefig(file_figure)
-        if show:
-            figure.show()
-        if close: matplotlib.pyplot.close(figure)
-        else: return figure
+    # @staticmethod
+    # def handle_figure(figure: matplotlib.figure,
+    #                   file_figure: str=False,
+    #                   show: bool=False,
+    #                   size: tuple=(18.5, 10),
+    #                   inches: int=100,
+    #                   tight_layout: bool=True,
+    #                   close: bool=True) -> matplotlib.figure:
+    #     figure.set_size_inches(size)
+    #     figure.set_dpi(inches)
+    #     figure.set_tight_layout(tight_layout)
+    #     if file_figure:
+    #         figure.savefig(file_figure)
+    #     if show:
+    #         figure.show()
+    #     if close: matplotlib.pyplot.close(figure)
+    #     else: return figure
 
     @staticmethod
     def handle_axis(axis: matplotlib.pyplot.axis or list[matplotlib.pyplot.axis],

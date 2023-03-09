@@ -2,12 +2,12 @@ from BEM import BEM
 import numpy as np
 
 do = {
-    "a": False,
+    "a": True,
     "b": False,
     "c": False
 }
 
-bem = BEM(root="data",
+bem = BEM(root="../data",
           file_airfoil="polar.xlsx",
           save_dir="results")
 
@@ -17,8 +17,9 @@ if do["a"]:
     bem.set_constants(rotor_radius=50,
                       n_blades=3,
                       air_density=1.225)
-    # the lines below this will go into the BEM class
-    inner_radius = 0.2*radius         # inner end of the blade section
+    results = bem.solve(wind_speed=10, tip_speed_ratio=8, pitch=np.radians(2))
+    print(results)
+
     pitch_deg = -2                      # pitch in degrees
     pitch = np.radians(pitch_deg)       # pitch angle in radian
     yaw_angles = np.radians([0,15,30])  # yaw angles to be calculated in radians
