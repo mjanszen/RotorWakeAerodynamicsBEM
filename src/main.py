@@ -18,7 +18,8 @@ if do["a"]:
                       n_blades=3,
                       air_density=1.225)
     results = bem.solve(wind_speed=10, tip_speed_ratio=8, pitch=np.radians(2))
-    print(results)
+    print(results["a"])
+    print(results["a_prime"])
 
     pitch_deg = -2                      # pitch in degrees
     pitch = np.radians(pitch_deg)       # pitch angle in radian
@@ -30,7 +31,7 @@ if do["a"]:
     # calc the Cl Cd
     # Calc Cn, Ct
     # calc prandtl correction
-    # update a 
+    # update a
 
 if do["b"]:
     pass

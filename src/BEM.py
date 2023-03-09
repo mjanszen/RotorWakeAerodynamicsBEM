@@ -54,11 +54,12 @@ class BEM:
             "v0": wind_speed
         }
         omega = tip_speed_ratio*wind_speed/self.rotor_radius
-        for r in np.linspace(inner_radius*self.rotor_radius, self.rotor_radius, resolution):
+        for r in np.linspace(inner_radius*self.rotor_radius, self.rotor_radius, 30):
             self.a_prime = 0
             chord = self._get_chord(r, self.rotor_radius)
             twist = self._get_twist(r, self.rotor_radius)
             local_solidity = self._local_solidity(chord, r, self.n_blades)
+
             def residue(a):
                 a_old = a
                 phi = self._phi(a=a, a_prime=self.a_prime, wind_speed=wind_speed, rotational_speed=omega, radius=r)
@@ -69,11 +70,7 @@ class BEM:
                 self._update_a_prime(local_solidity=local_solidity, c_tangential=c_t, inflow_angle=phi,
                                      tip_loss_correction=tip_loss_correction)
                 return a_old-a
-            try:
-                a = root(residue, *brent_bracket)
-            except ValueError:
-                print("Brent could not be used for the outer convergence, using Newton instead.")
-                a = newton(residue, 0.1)
+            a = newton(residue, 0)
 
             phi = np.arctan((1-a)*wind_speed/((1+self.a_prime)*omega*r))
             _, _, _, c_n, c_t, tip_loss_correction = self._phi_to_aero_values(phi=phi, twist=twist, pitch=pitch,
@@ -88,7 +85,7 @@ class BEM:
         return results
 
     def _phi_to_aero_values(self, phi: float, twist:float or np.ndarray, pitch: float, radius: float) -> tuple:
-        alpha = phi-(twist+pitch)
+        alpha = np.rad2deg(phi-(twist+pitch))
         c_l = self.interp["c_l"](alpha)
         c_d = self.interp["c_d"](alpha)
         c_n = self._c_normal(phi, c_l, c_d)
