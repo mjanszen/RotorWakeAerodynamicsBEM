@@ -15,3 +15,17 @@
 - copy functions from old codes 
 - make a general code setup 
 - define functions and interface information between functions   
+
+
+- function input values 
+
+- Function Cl, CD interpolate from Airfoil polar (In: aoa [rad]; out [Cl, CD]  ) 
+  - 
+- Function Ct Cn (IN: AOA, Cl, CD; OUT: [Ct, Cn])
+
+- Function for induction factors (In: r,V, ...  )
+  - Prandtl tip loss fct (IN: radial position, phi,n_blades ; OUT: tip loss factor)
+  - Glauert correction 
+- Function for input 
+
+- plot functions 
