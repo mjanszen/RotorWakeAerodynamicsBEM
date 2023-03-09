@@ -233,6 +233,28 @@ class BEM:
         return n_blades*chord/(2*np.pi*radius)
 
     @staticmethod
+    def _tip_and_root_loss_correction(r: float, tsr: float, rotor_radius: float, root_radius: float, n_blades: int, axial_induction) -> float:
+        """
+        Returns the factor F for the tip loss correction according to Prandtl
+        :param r: current radius
+        :param rotor_radius: total radius of the rotor
+        :param root_radius: inner radius of the blade 
+        :param n_blades: number of blades
+        :return: Prandtl tip loss correction
+        """
+        
+        # Tip part
+        temp1 = -n_blades/2*(rotor_radius-r)/r*np.sqrt( 1+ ((tsr*r)**2)/((1-axial_induction)**2))
+        f_tip = np.array(2/np.pi*np.arccos(np.exp(temp1)))
+        f_tip[np.isnan(f_tip)] = 0
+
+        # root part
+        temp1 = n_blades/2*(rootradius-r)/r*np.sqrt( 1+ ((tsr*r)**2)/((1-axial_induction)**2))
+        f_root = np.array(2/np.pi*np.arccos(np.exp(temp1)))
+        f_root[np.isnan(f_rppt)] = 0
+        return f_root*f_tip, f_tip, f_root
+
+    @staticmethod
     def _tip_loss_correction(r: float, phi: float, rotor_radius: float, n_blades: int) -> float:
         """
         Returns the factor F for the tip loss correction according to Prandtl
