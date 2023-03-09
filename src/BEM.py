@@ -244,15 +244,22 @@ class BEM:
         """
         
         # Tip part
-        temp1 = -n_blades/2*(rotor_radius-r)/r*np.sqrt( 1+ ((tsr*r)**2)/((1-axial_induction)**2))
-        f_tip = np.array(2/np.pi*np.arccos(np.exp(temp1)))
-        f_tip[np.isnan(f_tip)] = 0
+        d = ((2 * np.pi) / (NBlades)) * ((1-axial_induction) / (np.sqrt(TSR**2 + (1-axial_induction)**2)) )
+        f_tip_new = (2/ np.pi) * np.arccos(np.exp(-np.pi * (1-r_R / tipradius_R)/d))
+            
+        d_root = ((2 * np.pi) / (NBlades)) * ((1-axial_induction) / (np.sqrt(TSR**2 + (1-axial_induction)**2)) )
+        f_root_new = (2/ np.pi) * np.arccos(np.exp(-np.pi * (r_R / tipradius_R)/d_root))
+                        
+
+        #temp1 = -n_blades/2*(rotor_radius-r)/r*np.sqrt( 1+ ((tsr*r)**2)/((1-axial_induction)**2))
+        #f_tip = np.array(2/np.pi*np.arccos(np.exp(temp1)))
+        #f_tip[np.isnan(f_tip)] = 0
 
         # root part
-        temp1 = n_blades/2*(rootradius-r)/r*np.sqrt( 1+ ((tsr*r)**2)/((1-axial_induction)**2))
-        f_root = np.array(2/np.pi*np.arccos(np.exp(temp1)))
-        f_root[np.isnan(f_rppt)] = 0
-        return f_root*f_tip, f_tip, f_root
+        #temp1 = n_blades/2*(rootradius-r)/r*np.sqrt( 1+ ((tsr*r)**2)/((1-axial_induction)**2))
+        #f_root = np.array(2/np.pi*np.arccos(np.exp(temp1)))
+        #f_root[np.isnan(f_rppt)] = 0
+        return f_tip_new * f_root_new, f_tip_new, f_root_new #f_root*f_tip, f_tip, f_root
 
     @staticmethod
     def _tip_loss_correction(r: float, phi: float, rotor_radius: float, n_blades: int) -> float:
