@@ -3,6 +3,7 @@ from scipy.optimize import brentq as root, newton
 import pandas as pd
 import scipy.interpolate as interpolate
 from helper_functions import Helper
+import scipy
 helper=Helper()
 
 
@@ -83,6 +84,62 @@ class BEM:
             results["f_t"].append(self._f_t(inflow_velocity=inflow_velocity, chord=chord, c_tangential=c_t))
             results["tlc"].append(tip_loss_correction)
         return results
+
+    def _calculate_thrust(self, f_n, radial_positions):
+        """
+            Calculate thrust from the normal forces. Account for f_t = 0 at the tip.
+        f_n: normal forces
+        radial_positions: radial position along the blade matching the positions of f_n
+        n_blades:   number of blades
+        radius:     max radius
+        """
+        thrust = self.n_blades*scipy.integrate.simpson([*f_n, 0], [*radial_positions, self.rotor_radius])
+        return thrust
+
+    def _calculate_power(self, f_t, radial_positions, omega):
+        """
+            Calculate power from the normal forces. Account for f_n = 0 at the tip.
+        f_t: tangential forces
+        radial_positions: radial position along the blade matching the positions of f_n
+        n_blades:   number of blades
+        radius:     max radius
+        omega:      [rad/s] rotational speed
+        """
+        power = omega*self.n_blades*scipy.integrate.simpson(np.multiply([*radial_positions, self.rotor_radius], [*f_t, 0]),
+                                                           [*radial_positions, self.rotor_radius])
+        return power
+
+    def _calc_ct(self, thrust, velocity):
+        """
+            Calculate the thrust coefficient ct
+        """
+        return thrust/(0.5*np.pi*(self.rotor_radius**2)*self.air_density*(velocity**2))
+
+    def _calc_cp(self, power, velocity):
+        """
+            Calculate the power coefficient ct
+        """
+        return power/(0.5*np.pi*(self.rotor_radius**2)*self.air_density*(velocity**3))
+
+    def _calc_ct_distribution(self, f_n, velocity):
+        """
+        Calculate the distribution of the thrust coefficient along the blade
+        f_n: normal forces along the blade
+        radius: maximum radius of the Blade
+        velocity: fluid velocity od V0
+        """
+        f_n = np.array(f_n)
+        return f_n/(0.5*np.pi*(self.rotor_radius**2)*self.air_density*(velocity**3))
+
+    def _calc_cp_distribution(self, f_t, velocity):
+        """
+        Calc the distribution of the power coeff. along the blade
+        f_t: tangential forces along the blade
+        radius: maximum radius of the Blade
+        velocity: fluid velocity od V0
+        """
+        f_t = np.array(f_t)
+        return f_t/(0.5*np.pi*(self.rotor_radius**2)*self.air_density*(velocity**3))
 
     def _phi_to_aero_values(self, phi: float, twist:float or np.ndarray, pitch: float, radius: float) -> tuple:
         alpha = np.rad2deg(phi-(twist+pitch))
