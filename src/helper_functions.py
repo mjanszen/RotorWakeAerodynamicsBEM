@@ -71,13 +71,13 @@ class Helper():
 
     @staticmethod
     def handle_axis(axis: matplotlib.pyplot.axis or list[matplotlib.pyplot.axis],
-                    title: str=None or str or list,
+                    title:  str or list=None ,
                     grid: bool=False,
                     legend: bool=False,
                     legend_loc: int=0,
                     legend_columns: int=1,
                     x_label: str=False,
-                    y_label: str or list[str]=False ,
+                    y_label: str or list[str]=False,
                     z_label: str=False,
                     x_scale: str="linear",
                     y_scale: str="linear",
@@ -91,7 +91,7 @@ class Helper():
             if type(title) == str:
                 if i == 0:
                     ax.set_title(title)
-            else:
+            elif title is not None:
                 if len(title) == 1:
                     ax.set_title(title[0])
                 else:
@@ -109,7 +109,7 @@ class Helper():
                 axis[0].grid(grid)
             if x_label:
                 ax.set_xlabel(x_label, labelpad=5)
-            if y_label:
+            if y_label[i]:
                 ax.set_ylabel(y_label[i], labelpad=5)
             if z_label:
                 ax.set_zlabel(z_label, labelpad=0)
