@@ -300,23 +300,6 @@ class BEM:
         return 3*(1-r/r_max)+1
 
     @staticmethod
-    def _root_axial_induction_factor(phi: float,
-                                     local_solidity: float,
-                                     c_normal: float,
-                                     tip_loss_correction: float,
-                                     bracket: tuple=(-1,1)) -> float:
-        def residue(a):
-            if a <= 1/3:
-                return 1/((4*tip_loss_correction*np.sin(phi)**2)/(local_solidity*c_normal)+1)-a
-            else:
-                return local_solidity*((1-a)/np.sin(phi))**2*c_normal-4*a*tip_loss_correction*(1-a/4*(5-3*a))
-        try:
-            return root(residue, *bracket)
-        except ValueError:
-            print("Brent could not be used for the inner convergence, using Newton instead.")
-            return newton(residue, 1/3)
-
-    @staticmethod
     def _tangential_induction_factor(phi: float, local_solidity: float, c_tangent: float, tip_loss_correction: float)\
             -> float:
         return 1/((4*tip_loss_correction*np.sin(phi)*np.cos(phi))/(local_solidity*c_tangent)-1)
