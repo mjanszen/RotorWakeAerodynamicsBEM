@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 helper = Helper()
 
 do = {
-    "a": True,
-    "DTU_test": False,
+    "a": False,
+    "DTU_test": True,
     "b": False,
     "c": False
 }
@@ -19,6 +19,7 @@ bem = BEM(root="../data",
 if do["a"]:
     # Parameters
     bem.set_constants(rotor_radius=50,
+                      root_radius=0,
                       n_blades=3,
                       air_density=1.225)
     results = bem.solve(wind_speed=10, tip_speed_ratio=8, pitch=np.radians(2))
@@ -42,6 +43,7 @@ if do["a"]:
     # update a
 if do["DTU_test"]:
     bem.set_constants(rotor_radius=31,
+                      root_radius=0,
                       n_blades=3,
                       air_density=1.225)
     results = bem.solve(wind_speed=8, tip_speed_ratio=2.61*31/8, pitch=np.deg2rad(-3), resolution=1)
