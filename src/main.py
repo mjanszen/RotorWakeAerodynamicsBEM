@@ -46,7 +46,8 @@ if do["DTU_test"]:
                       root_radius=0,
                       n_blades=3,
                       air_density=1.225)
-    results = bem.solve(wind_speed=8, tip_speed_ratio=2.61*31/8, pitch=np.deg2rad(-3), resolution=1)
+    results = bem.solve(wind_speed=8, tip_speed_ratio=2.61*31/8, pitch=np.deg2rad(-3), resolution=1,
+                        glauert_correction_type="dtu", blade_end_correction_type="dtu", root_loss_correction=False)
     print(results)
 
 if do["b"]:
