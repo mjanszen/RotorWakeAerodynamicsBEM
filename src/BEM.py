@@ -39,6 +39,7 @@ class BEM:
               wind_speed: float,
               tip_speed_ratio: float,
               pitch: float or np.ndarray,
+              start_radius: float=None,
               resolution: int=100,
               brent_bracket: tuple=(0,0.9),
               glauert_correction_type: str="tud",
@@ -54,6 +55,7 @@ class BEM:
         :param resolution:
         :return:
         """
+        start_radius = start_radius if start_radius is not None else self.root_radius
         results = {
             "positions": list(),
             "a": list(),
@@ -64,13 +66,10 @@ class BEM:
             "v0": wind_speed
         }
         omega = tip_speed_ratio*wind_speed/self.rotor_radius
-        for r in np.linspace(self.root_radius, self.rotor_radius, resolution):
+        for r in np.linspace(start_radius, self.rotor_radius, resolution):
             self.a_prime = 0
             chord = self._get_chord(r, self.rotor_radius)
             twist = self._get_twist(r, self.rotor_radius)
-            chord = 0.5
-            twist = np.deg2rad(2)
-            r = 24.5
             local_solidity = self._local_solidity(chord, r, self.n_blades)
 
             def residue(a):
@@ -91,7 +90,6 @@ class BEM:
             except ValueError:
                 print("Brent could not be used for the convergence, using Newton instead.")
                 a =  newton(residue, 1/3)
-
             phi = np.arctan((1-a)*wind_speed/((1+self.a_prime)*omega*r))
             aero_values = self._phi_to_aero_values(phi=phi, twist=twist, pitch=pitch, radius=r, a=a,
                                                    tip_seed_ratio=tip_speed_ratio,
@@ -99,7 +97,9 @@ class BEM:
                                                    root=root_loss_correction, tip=tip_loss_correction)
             c_n, c_t, blade_end_correction = aero_values[3], aero_values[4], aero_values[5]
             inflow_velocity = np.sqrt((omega*r*(1+self.a_prime))**2+(wind_speed*(1-a))**2)
-
+            if self.a_prime == "-inf":
+                c_n = 0
+                c_t = 0
             results["positions"].append(r)
             results["a"].append(a)
             results["a_prime"].append(self.a_prime)
@@ -170,7 +170,6 @@ class BEM:
         alpha = np.rad2deg(phi-(twist+pitch))
         c_l = self.interp["c_l"](alpha)
         c_d = self.interp["c_d"](alpha)
-        c_l, c_d = 0.5, 0.01
         c_n = self._c_normal(phi, c_l, c_d)
         c_t = self._c_tangent(phi, c_l, c_d)
         return alpha, c_l, c_d, c_n, c_t, self._blade_end_correction(which=blade_end_correction_type, tip=tip, root=root,
