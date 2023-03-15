@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.optimize import brentq as root, newton
+from scipy.optimize import brentq, newton
 import pandas as pd
 import scipy.interpolate as interpolate
 from helper_functions import Helper
@@ -13,6 +13,7 @@ class BEM:
                  file_airfoil: str,
                  save_dir: str):
         self.rotor_radius = None
+        self.root_radius = None
         self.n_blades = None
         self.air_density = None
         self.dir_save = save_dir
@@ -22,9 +23,13 @@ class BEM:
         df_tmp = pd.read_excel(root+"/"+file_airfoil, skiprows=3)
         self.interp = {"c_l": interpolate.interp1d(df_tmp["alpha"], df_tmp["cl"]),
                        "c_d": interpolate.interp1d(df_tmp["alpha"], df_tmp["cd"])}
+        self.implemented_glauert_correction = ["none", "dtu", "tud"]
+        self.implemented_tip_correction = ["none", "dtu", "tud"]
+        self.implemented_root_correction = ["none", "tud"]
 
     def set_constants(self,
                       rotor_radius: float,
+                      root_radius: float,
                       n_blades: int,
                       air_density: float) -> None:
         self._set(**{param: value for param, value in locals().items() if param != "self"})
@@ -34,10 +39,15 @@ class BEM:
               wind_speed: float,
               tip_speed_ratio: float,
               pitch: float or np.ndarray,
-              resolution: int=30,
-              brent_bracket: tuple=(0,1),
-              inner_radius: float=0.2):
+              start_radius: float=None,
+              resolution: int=100,
+              brent_bracket: tuple=(0,0.9),
+              glauert_correction_type: str="tud",
+              blade_end_correction_type: str="tud",
+              tip_loss_correction: bool=True,
+              root_loss_correction: bool=True):
         """
+        Glauert_correction: either 'tud' (TU Delft) or 'dtu' (Denmark's TU). Same for blade_end_correction
         All angles must be in rad.
         :param wind_speed:
         :param tip_speed_ratio:
@@ -45,44 +55,57 @@ class BEM:
         :param resolution:
         :return:
         """
+        start_radius = start_radius if start_radius is not None else self.root_radius
         results = {
-            "positions": np.linspace(0.2*self.rotor_radius, self.rotor_radius, resolution),
+            "positions": list(),
             "a": list(),
             "a_prime": list(),
             "f_n": list(),
             "f_t": list(),
-            "tlc": list(), # tip loss correction
+            "bec": list(), # blade end correction
             "v0": wind_speed
         }
         omega = tip_speed_ratio*wind_speed/self.rotor_radius
-        for r in np.linspace(inner_radius*self.rotor_radius, self.rotor_radius, 30):
+        for r in np.linspace(start_radius, self.rotor_radius, resolution):
             self.a_prime = 0
             chord = self._get_chord(r, self.rotor_radius)
             twist = self._get_twist(r, self.rotor_radius)
             local_solidity = self._local_solidity(chord, r, self.n_blades)
 
             def residue(a):
-                a_old = a
                 phi = self._phi(a=a, a_prime=self.a_prime, wind_speed=wind_speed, rotational_speed=omega, radius=r)
-                alpha, c_l, c_d, c_n, c_t, tip_loss_correction = self._phi_to_aero_values(phi=phi, twist=twist,
-                                                                                          pitch=pitch, radius=r)
-                a = self._root_axial_induction_factor(phi=phi, local_solidity=local_solidity,c_normal=c_n,
-                                                      tip_loss_correction=tip_loss_correction)
+                aero_values = self._phi_to_aero_values(phi=phi, twist=twist, pitch=pitch, radius=r, a=a,
+                                                       tip_seed_ratio=tip_speed_ratio,
+                                                       blade_end_correction_type=blade_end_correction_type,
+                                                       root=root_loss_correction, tip=tip_loss_correction)
+                c_n, c_t, blade_end_correction = aero_values[3], aero_values[4], aero_values[5]
                 self._update_a_prime(local_solidity=local_solidity, c_tangential=c_t, inflow_angle=phi,
-                                     tip_loss_correction=tip_loss_correction)
-                return a_old-a
-            a = newton(residue, 0)
+                                     blade_end_correction=blade_end_correction)
+                return self._equate_blade_element_and_momentum(glauert_correction=glauert_correction_type, a=a,
+                                                               blade_end_correction=blade_end_correction, phi=phi,
+                                                               local_solidity=local_solidity, c_normal=c_n)
 
+            try:
+                a = brentq(residue, *brent_bracket)
+            except ValueError:
+                print("Brent could not be used for the convergence, using Newton instead.")
+                a =  newton(residue, 1/3)
             phi = np.arctan((1-a)*wind_speed/((1+self.a_prime)*omega*r))
-            _, _, _, c_n, c_t, tip_loss_correction = self._phi_to_aero_values(phi=phi, twist=twist, pitch=pitch,
-                                                                              radius=r)
+            aero_values = self._phi_to_aero_values(phi=phi, twist=twist, pitch=pitch, radius=r, a=a,
+                                                   tip_seed_ratio=tip_speed_ratio,
+                                                   blade_end_correction_type=blade_end_correction_type,
+                                                   root=root_loss_correction, tip=tip_loss_correction)
+            c_n, c_t, blade_end_correction = aero_values[3], aero_values[4], aero_values[5]
             inflow_velocity = np.sqrt((omega*r*(1+self.a_prime))**2+(wind_speed*(1-a))**2)
-
+            if self.a_prime == "-inf":
+                c_n = 0
+                c_t = 0
+            results["positions"].append(r)
             results["a"].append(a)
             results["a_prime"].append(self.a_prime)
             results["f_n"].append(self._f_n(inflow_velocity=inflow_velocity, chord=chord, c_normal=c_n))
             results["f_t"].append(self._f_t(inflow_velocity=inflow_velocity, chord=chord, c_tangential=c_t))
-            results["tlc"].append(tip_loss_correction)
+            results["bec"].append(blade_end_correction)
         return results
 
     def _calculate_thrust(self, f_n, radial_positions):
@@ -141,17 +164,17 @@ class BEM:
         f_t = np.array(f_t)
         return f_t/(0.5*np.pi*(self.rotor_radius**2)*self.air_density*(velocity**3))
 
-    def _phi_to_aero_values(self, phi: float, twist:float or np.ndarray, pitch: float, radius: float) -> tuple:
+    def _phi_to_aero_values(self, phi: float, twist:float or np.ndarray, pitch: float, radius: float,
+                            tip_seed_ratio: float, a: float, blade_end_correction_type: str, tip: bool, root: bool) -> \
+            tuple:
         alpha = np.rad2deg(phi-(twist+pitch))
         c_l = self.interp["c_l"](alpha)
         c_d = self.interp["c_d"](alpha)
         c_n = self._c_normal(phi, c_l, c_d)
         c_t = self._c_tangent(phi, c_l, c_d)
-        tip_loss_correction = self._tip_loss_correction(r=radius,
-                                                        phi=phi,
-                                                        rotor_radius=self.rotor_radius,
-                                                        n_blades=self.n_blades)
-        return alpha, c_l, c_d, c_n, c_t, tip_loss_correction
+        return alpha, c_l, c_d, c_n, c_t, self._blade_end_correction(which=blade_end_correction_type, tip=tip, root=root,
+                                                                     phi=phi, radius=radius, a=a,
+                                                                     tip_seed_ratio=tip_seed_ratio)
 
     def _set(self, **kwargs) -> None:
         """
@@ -174,9 +197,9 @@ class BEM:
         if len(not_set) != 0:
             raise ValueError(f"Variable(s) {not_set} not set. Set all variables before use.")
 
-    def _update_a_prime(self, local_solidity: float, c_tangential: float, tip_loss_correction: float,
+    def _update_a_prime(self, local_solidity: float, c_tangential: float, blade_end_correction: float,
                         inflow_angle: float) -> None:
-        self.a_prime = local_solidity*c_tangential*(1+self.a_prime)/(4*tip_loss_correction*np.sin(inflow_angle)*
+        self.a_prime = local_solidity*c_tangential*(1+self.a_prime)/(4*blade_end_correction*np.sin(inflow_angle)*
                                                                      np.cos(inflow_angle))
 
     def _f_n(self, inflow_velocity: float, chord: float, c_normal: float):
@@ -198,6 +221,55 @@ class BEM:
         :return:
         """
         return 1/2*self.air_density*inflow_velocity**2*chord*c_tangential
+
+    def _equate_blade_element_and_momentum(self, glauert_correction: str, a: float, blade_end_correction: float,
+                                           phi: float, local_solidity: float, c_normal: float):
+        if a < 1/3:
+            return 1/((4*blade_end_correction*np.sin(phi)**2)/(local_solidity*c_normal)+1)-a
+        else:
+            if glauert_correction == "dtu":
+                return local_solidity*((1-a)/np.sin(phi))**2*c_normal-4*a*blade_end_correction*(1-a/4*(5-3*a))
+            elif glauert_correction == "tud":
+                CT_1 = 1.816
+                return local_solidity*((1-a)/np.sin(phi))**2*c_normal-(CT_1-4*(np.sqrt(CT_1)-1)*(1-a))
+            else:
+                raise ValueError(f"Parameter 'glauert_correction' must be one of {self.implemented_glauert_correction}, "
+                                 f"but was {glauert_correction}.")
+
+    def _blade_end_correction(self, which: str, tip: bool, root: bool, phi: float, radius: float,
+                              tip_seed_ratio: float, a: float) -> float:
+        """
+        Different Prandtl correction methods.
+        :param which:
+        :param tip:
+        :param root:
+        :param phi:
+        :param radius:
+        :param tip_seed_ratio:
+        :param a:
+        :return:
+        """
+        F = 1
+        if tip:
+            if which == "dtu":
+                if np.sin(np.abs(phi)) < 0.01:
+                    pass
+                else:
+                    F = 2/np.pi*np.arccos(np.exp(-(self.n_blades*(self.rotor_radius-radius))/(2*radius*np.sin(np.abs(phi)))))
+            elif which == "tud":
+                d = 2*np.pi/self.n_blades*(1-a)/(np.sqrt(tip_seed_ratio**2+(1-a)**2))
+                F = 2/np.pi*np.arccos(np.exp(-np.pi*((self.rotor_radius-radius)/self.rotor_radius)/d))
+            else:
+                raise ValueError(f"Parameter 'blade_end_correction' must be one of "
+                                 f"{self.implemented_tip_correction}, but was {which}.")
+        if root:
+            if which == "tud":
+                d = 2*np.pi/self.n_blades*(1-a)/(np.sqrt(tip_seed_ratio**2+(1-a)**2))
+                F *= 2/np.pi*np.arccos(np.exp(-np.pi*((radius-self.root_radius)/self.rotor_radius)/d))
+            else:
+                raise ValueError(f"Parameter 'blade_end_correction' must be one of "
+                                 f"{self.implemented_root_correction}, but was {which}.")
+        return F
 
     @staticmethod
     def _c_normal(phi: float, c_lift: float, c_drag: float) -> float:
@@ -274,6 +346,7 @@ class BEM:
         if np.sin(np.abs(phi)) < 0.01:
             return 1
         return 2/np.pi*np.arccos(np.exp(-(n_blades*(rotor_radius-r))/(2*r*np.sin(np.abs(phi)))))
+
     @staticmethod
     def _phi(a: float, a_prime: float, wind_speed: float, rotational_speed: float, radius: float) -> float:
         """
@@ -303,23 +376,6 @@ class BEM:
             r_max: maximum radius of the blade in [m]
         """
         return 3*(1-r/r_max)+1
-
-    @staticmethod
-    def _root_axial_induction_factor(phi: float,
-                                     local_solidity: float,
-                                     c_normal: float,
-                                     tip_loss_correction: float,
-                                     bracket: tuple=(-1,1)) -> float:
-        def residue(a):
-            if a <= 1/3:
-                return 1/((4*tip_loss_correction*np.sin(phi)**2)/(local_solidity*c_normal)+1)-a
-            else:
-                return local_solidity*((1-a)/np.sin(phi))**2*c_normal-4*a*tip_loss_correction*(1-a/4*(5-3*a))
-        try:
-            return root(residue, *bracket)
-        except ValueError:
-            print("Brent could not be used for the inner convergence, using Newton instead.")
-            return newton(residue, 1/3)
 
     @staticmethod
     def _tangential_induction_factor(phi: float, local_solidity: float, c_tangent: float, tip_loss_correction: float)\

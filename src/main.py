@@ -6,6 +6,7 @@ helper = Helper()
 
 do = {
     "a": True,
+    "DTU_test": False,
     "b": False,
     "c": False
 }
@@ -18,12 +19,13 @@ bem = BEM(root="../data",
 if do["a"]:
     # Parameters
     bem.set_constants(rotor_radius=50,
+                      root_radius=10,
                       n_blades=3,
                       air_density=1.225)
     results = bem.solve(wind_speed=10, tip_speed_ratio=8, pitch=np.radians(2))
     fig, ax = plt.subplots()
-    ax.plot(results["positions"][:-2], results["a"][:-2], label="a")
-    ax.plot(results["positions"][:-2], results["a_prime"][:-2], label="a'")
+    ax.plot(results["positions"], results["a"], label="a")
+    ax.plot(results["positions"], results["a_prime"], label="a'")
     helper.handle_axis(ax, legend=True, grid=True, x_label="radius in m", font_size=15, line_width=3)
     plt.show()
 
@@ -39,6 +41,14 @@ if do["a"]:
     # Calc Cn, Ct
     # calc prandtl correction
     # update a
+if do["DTU_test"]:
+    bem.set_constants(rotor_radius=31,
+                      root_radius=0,
+                      n_blades=3,
+                      air_density=1.225)
+    results = bem.solve(wind_speed=8, tip_speed_ratio=2.61*31/8, pitch=np.deg2rad(-3), resolution=1,
+                        glauert_correction_type="dtu", blade_end_correction_type="dtu", root_loss_correction=False)
+    print(results)
 
 if do["b"]:
     pass
