@@ -224,7 +224,7 @@ class BEM:
 
     def _equate_blade_element_and_momentum(self, glauert_correction: str, a: float, blade_end_correction: float,
                                            phi: float, local_solidity: float, c_normal: float):
-        if a < 1/3:
+        if a < 1/3 or glauert_correction == "none":
             return 1/((4*blade_end_correction*np.sin(phi)**2)/(local_solidity*c_normal)+1)-a
         else:
             if glauert_correction == "dtu":
