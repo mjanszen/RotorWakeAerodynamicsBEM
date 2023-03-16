@@ -305,49 +305,6 @@ class BEM:
         return n_blades*chord/(2*np.pi*radius)
 
     @staticmethod
-    def _tip_and_root_loss_correction(r: float, tsr: float, rotor_radius: float, root_radius: float, n_blades: int, axial_induction) -> float:
-        """
-        Returns the factor F for the tip loss correction according to Prandtl
-        :param r: current radius
-        :param rotor_radius: total radius of the rotor
-        :param root_radius: inner radius of the blade 
-        :param n_blades: number of blades
-        :return: Prandtl tip loss correction
-        """
-        
-        # Tip part
-        d = ((2 * np.pi) / (NBlades)) * ((1-axial_induction) / (np.sqrt(TSR**2 + (1-axial_induction)**2)) )
-        f_tip_new = (2/ np.pi) * np.arccos(np.exp(-np.pi * (1-r_R / tipradius_R)/d))
-            
-        d_root = ((2 * np.pi) / (NBlades)) * ((1-axial_induction) / (np.sqrt(TSR**2 + (1-axial_induction)**2)) )
-        f_root_new = (2/ np.pi) * np.arccos(np.exp(-np.pi * (r_R / tipradius_R)/d_root))
-                        
-
-        #temp1 = -n_blades/2*(rotor_radius-r)/r*np.sqrt( 1+ ((tsr*r)**2)/((1-axial_induction)**2))
-        #f_tip = np.array(2/np.pi*np.arccos(np.exp(temp1)))
-        #f_tip[np.isnan(f_tip)] = 0
-
-        # root part
-        #temp1 = n_blades/2*(rootradius-r)/r*np.sqrt( 1+ ((tsr*r)**2)/((1-axial_induction)**2))
-        #f_root = np.array(2/np.pi*np.arccos(np.exp(temp1)))
-        #f_root[np.isnan(f_rppt)] = 0
-        return f_tip_new * f_root_new, f_tip_new, f_root_new #f_root*f_tip, f_tip, f_root
-
-    @staticmethod
-    def _tip_loss_correction(r: float, phi: float, rotor_radius: float, n_blades: int) -> float:
-        """
-        Returns the factor F for the tip loss correction according to Prandtl
-        :param r: current radius
-        :param phi: angle between flow and rotational direction in rad
-        :param rotor_radius: total radius of the rotor
-        :param n_blades: number of blades
-        :return: Prandtl tip loss correction
-        """
-        if np.sin(np.abs(phi)) < 0.01:
-            return 1
-        return 2/np.pi*np.arccos(np.exp(-(n_blades*(rotor_radius-r))/(2*r*np.sin(np.abs(phi)))))
-
-    @staticmethod
     def _phi(a: float, a_prime: float, wind_speed: float, rotational_speed: float, radius: float) -> float:
         """
         Function to calculate the inflow angle based on the two induction factors, the inflow velocity, radius and
