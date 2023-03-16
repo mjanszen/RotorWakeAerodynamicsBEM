@@ -29,3 +29,4 @@
 - Function for input 
 
 - plot functions 
+- stay sexy
