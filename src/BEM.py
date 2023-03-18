@@ -47,6 +47,7 @@ class BEM:
               tip_loss_correction: bool=True,
               root_loss_correction: bool=True):
         """
+        Function to run the BEM loop
         Glauert_correction: either 'tud' (TU Delft) or 'dtu' (Denmark's TU). Same for blade_end_correction
         All angles must be in rad.
         :param wind_speed:
@@ -55,51 +56,85 @@ class BEM:
         :param resolution:
         :return:
         """
+        
         start_radius = start_radius if start_radius is not None else self.root_radius
-        results = {
-            "positions": list(),
-            "a": list(),
-            "a_prime": list(),
-            "f_n": list(),
-            "f_t": list(),
-            "bec": list(), # blade end correction
-            "v0": wind_speed
-        }
-        omega = tip_speed_ratio*wind_speed/self.rotor_radius
-        for r in np.linspace(start_radius, self.rotor_radius, resolution):
-            self.a_prime = 0
-            chord = self._get_chord(r, self.rotor_radius)
-            twist = self._get_twist(r, self.rotor_radius)
-            local_solidity = self._local_solidity(chord, r, self.n_blades)
 
+        # Initialize the result containers
+        results = {
+            "positions": list(),    # Positions along the blade
+            "a": list(),            # Axial Induction
+            "a_prime": list(),      # Tangential induction
+            "f_n": list(),          # Forces normal to the rotor plane
+            "f_t": list(),          # Forces tangential in the rotor plane
+            "bec": list(),          # blade end correction
+            "v0": wind_speed        # V_infinity 
+        }
+        
+        # Calculate the rotational speed
+        omega = tip_speed_ratio*wind_speed/self.rotor_radius
+
+        # Loop along the span of the blade (blade sections)
+        for r in np.linspace(start_radius, self.rotor_radius, resolution):
+           
+            # Get/Set values from the local section
+            self.a_prime = 0            # Initialize a start value for the induction
+            chord = self._get_chord(r, self.rotor_radius)   # Get the chord
+            twist = self._get_twist(r, self.rotor_radius)   # Get the twist
+            local_solidity = self._local_solidity(chord, r, self.n_blades)  # Calculate the solidity (solidity is something like a parameter to show, how much we block the flow by blades/ blockage)
+
+            
             def residue(a):
+                """
+                Function that calculates the difference of the C_T values from a given induction
+                
+                IN: 
+                    a: axial induction factor
+
+                OUT:
+                    Difference between the CT values
+                """
+                
+                # Calculate the inflow angle phi
                 phi = self._phi(a=a, a_prime=self.a_prime, wind_speed=wind_speed, rotational_speed=omega, radius=r)
+                
+                # Calculate the aerodynamic properties that result from the Blade element theory
                 aero_values = self._phi_to_aero_values(phi=phi, twist=twist, pitch=pitch, radius=r, a=a,
                                                        tip_seed_ratio=tip_speed_ratio,
                                                        blade_end_correction_type=blade_end_correction_type,
                                                        root=root_loss_correction, tip=tip_loss_correction)
                 c_n, c_t, blade_end_correction = aero_values[3], aero_values[4], aero_values[5]
+                
+                # Update the tangential induction based on the other params
                 self._update_a_prime(local_solidity=local_solidity, c_tangential=c_t, inflow_angle=phi,
                                      blade_end_correction=blade_end_correction)
                 return self._equate_blade_element_and_momentum(glauert_correction=glauert_correction_type, a=a,
                                                                blade_end_correction=blade_end_correction, phi=phi,
                                                                local_solidity=local_solidity, c_normal=c_n)
-
+            
+            # Optimize the difference of the CT values and get the corresponding induction
             try:
-                a = brentq(residue, *brent_bracket)
+                a = brentq(residue, *brent_bracket)     # Brent method, has some problems sometimes
             except ValueError:
+                # When the Brent method does not work, we optimize using the Newton method
                 print("Brent could not be used for the convergence, using Newton instead.")
                 a =  newton(residue, 1/3)
+
+
+            # Now that we have optimum a, we can get the rest of the values 
             phi = np.arctan((1-a)*wind_speed/((1+self.a_prime)*omega*r))
             aero_values = self._phi_to_aero_values(phi=phi, twist=twist, pitch=pitch, radius=r, a=a,
                                                    tip_seed_ratio=tip_speed_ratio,
                                                    blade_end_correction_type=blade_end_correction_type,
                                                    root=root_loss_correction, tip=tip_loss_correction)
             c_n, c_t, blade_end_correction = aero_values[3], aero_values[4], aero_values[5]
-            inflow_velocity = np.sqrt((omega*r*(1+self.a_prime))**2+(wind_speed*(1-a))**2)
+            inflow_velocity = np.sqrt((omega*r*(1+self.a_prime))**2+(wind_speed*(1-a))**2)      # The actual wind speed seen by the blade section
+           
+            # Correct for non-possible values of the tangential induction
             if self.a_prime == "-inf":
                 c_n = 0
                 c_t = 0
+
+            # Assemble the result output structure
             results["positions"].append(r)
             results["a"].append(a)
             results["a_prime"].append(self.a_prime)
