@@ -105,6 +105,7 @@ class BEM:
                 c_n, c_t, blade_end_correction = aero_values[3], aero_values[4], aero_values[5]
                 
                 # Update the tangential induction based on the other params
+                # here the blade_end_correction is applied
                 self._update_a_prime(local_solidity=local_solidity, c_tangential=c_t, inflow_angle=phi,
                                      blade_end_correction=blade_end_correction)
                 return self._equate_blade_element_and_momentum(glauert_correction=glauert_correction_type, a=a,
@@ -117,8 +118,8 @@ class BEM:
             except ValueError:
                 # When the Brent method does not work, we optimize using the Newton method
                 print("Brent could not be used for the convergence, using Newton instead.")
-                a =  newton(residue, 1/3)
-
+                a =  newton(residue, 1/3) # Might be a problem as well
+            breakpoint()
 
             # Now that we have optimum a, we can get the rest of the values 
             phi = np.arctan((1-a)*wind_speed/((1+self.a_prime)*omega*r))
