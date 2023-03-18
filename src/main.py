@@ -24,7 +24,7 @@ if do["a"]:
                       n_blades=3,
                       air_density=1.225)
     # Calculation
-    results = bem.solve(wind_speed=10, tip_speed_ratio=8, pitch=np.radians(2))
+    results = bem.solve_TUD(wind_speed=10, tip_speed_ratio=8, pitch=np.radians(2))
     
     # Plots
     fig, ax = plt.subplots()
