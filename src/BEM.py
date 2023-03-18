@@ -69,23 +69,24 @@ class BEM:
         }
 
         # Calculate the rotational speed
+        #breakpoint()
         omega = tip_speed_ratio*wind_speed/self.rotor_radius
         radii = np.linspace(start_radius, self.rotor_radius, resolution)
         # Loop along the span of the blade (blade sections)
-        for r_inside, r_outside in zip(radii[:-1], radii[1:]):
-            r_centre = (r_inside+r_outside)/2
-            elem_length = r_outside-r_inside
+        for r_inside, r_outside in zip(radii[:-1], radii[1:]):      # Take the left and right radius of every element
+            r_centre = (r_inside+r_outside)/2                       # representative radius in the middle of the section
+            elem_length = r_outside-r_inside                        # length of elemen
             # Get/Set values from the local section
             chord = self._get_chord(r_centre, self.rotor_radius)  # Get the chord
             twist = self._get_twist(r_centre, self.rotor_radius)  # Get the twist
-            area_annulus = np.pi*r_outside**2-r_inside**2
+            area_annulus = np.pi*(r_outside**2-r_inside**2)
             a, a_prime = 1/3, 0
             for i in range(max_iterations):
                 phi = self._phi(a=a, a_prime=a_prime, wind_speed=wind_speed, rotational_speed=omega, radius=r_centre)
                 _, _, _, c_n, c_t = self._phi_to_aero_values(phi=phi, twist=twist, pitch=pitch,
                                                              tip_seed_ratio=tip_speed_ratio, university="tud")
                 inflow_speed = self._inflow_velocity(wind_speed, a, a_prime, omega, r_centre)
-                thrust = self._f_n(inflow_speed, chord, c_n)*self.n_blades*elem_length
+                thrust = self._f_n(inflow_speed, chord, c_n)*self.n_blades*elem_length  # f_n is force per unit span
 
                 C_T = thrust/(1/2*self.air_density*wind_speed**2*area_annulus)
                 a_new = self._a(C_T=C_T)
@@ -93,9 +94,10 @@ class BEM:
                                                                   root=root_loss_correction, radius=r_centre,
                                                                   tip_seed_ratio=tip_speed_ratio, a=a, phi=0)
                 a_new /= blade_end_correction
-                a = 0.75*a+0.25*a_new
+                a = 0.75*a+0.25*a_new       # This is a relaxation factor
 
-                F_tangential = self._f_t(inflow_speed, chord, c_t)*self.n_blades*elem_length
+                f_tangential = self._f_t(inflow_speed, chord, c_t)*self.n_blades#*elem_length
+                breakpoint()
                 a_prime = self._a_prime(F_tangential, r_centre, wind_speed, a, tip_speed_ratio)/blade_end_correction
                 if np.abs(a-a_new) < max_convergence_error:
                     break
