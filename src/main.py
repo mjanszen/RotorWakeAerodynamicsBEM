@@ -2,13 +2,15 @@ from BEM import BEM
 import numpy as np
 from helper_functions import Helper
 import matplotlib.pyplot as plt
+from task5 import task5
 helper = Helper()
 
 # Choose whicht parts of the code to run 
 do = {
     "different_tsr": True,
     "plots": False,
-    "c": False
+    "c": False,
+    "task5": False
 }
 
 bem = BEM(data_root="../data",
@@ -22,7 +24,8 @@ if do["different_tsr"]:
     for tsr in np.linspace(6,10,41):
         bem.solve_TUD(wind_speed=10, tip_speed_ratio=tsr, pitch=-2)
 
-
+if do["task5"]:
+    task5()
 
 if do["plots"]:
     pass
