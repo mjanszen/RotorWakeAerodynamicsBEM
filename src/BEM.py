@@ -61,20 +61,21 @@ class BEM:
         start_radius = start_radius if start_radius is not None else self.root_radius
         # Initialise the result containers
         results = {
-            "r_centre": list(),  # radius used for the calculations
-            "r_inner": list(), # inner radius of the blade element
-            "r_outer": list(), # outer radius of the blade element
-            "a": list(),  # Axial Induction factor
-            "a_prime": list(),  # Tangential induction factor
-            "f_n": list(),  # Forces normal to the rotor plane in N/m
-            "f_t": list(),  # Forces tangential in the rotor plane in N/m
-            "bec": list(),  # blade end correction (depending on 'tip' and 'root')
-            "C_T": list(), # thrust coefficient
-            "alpha": list(), # angle of attack
-            "circulation": list(), # magnitude of the circulation using Kutta-Joukowski
-            "v0": list(),  # flow velocity normal to rotor plane
-            "tsr": list(), # tip speed ratio
-            "pitch": list() # pitch in degree
+            "r_centre": list(),     # radius used for the calculations
+            "r_inner": list(),      # inner radius of the blade element
+            "r_outer": list(),      # outer radius of the blade element
+            "a": list(),            # Axial Induction factor
+            "a_prime": list(),      # Tangential induction factor
+            "f_n": list(),          # Forces normal to the rotor plane in N/m
+            "f_t": list(),          # Forces tangential in the rotor plane in N/m
+            "bec": list(),          # blade end correction (depending on 'tip' and 'root')
+            "C_T": list(),          # thrust coefficient
+            "alpha": list(),        # angle of attack
+            "circulation": list(),  # magnitude of the circulation using Kutta-Joukowski
+            "v0": list(),           # flow velocity normal to rotor plane
+            "tsr": list(),          # tip speed ratio
+            "pitch": list(),         # pitch in degree
+            "end_correction": list()# Prandtl tip and root loss factor
         }
         # delete data with same wind speed, tip speed ratio and pitch angle.
         try:
@@ -156,6 +157,7 @@ class BEM:
             results["v0"].append(wind_speed)
             results["tsr"].append(tip_speed_ratio)
             results["pitch"].append(np.rad2deg(pitch))
+            results["end_correction"].append(blade_end_correction)
         self.df_results = pd.concat([self.df_results, pd.DataFrame(results)])
         self.df_results.to_csv(self.root+"/BEM_results.dat", index=False)
         return None
