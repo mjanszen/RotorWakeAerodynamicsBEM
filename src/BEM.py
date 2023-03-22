@@ -158,6 +158,7 @@ class BEM:
             results["tsr"].append(tip_speed_ratio)
             results["pitch"].append(np.rad2deg(pitch))
             results["end_correction"].append(blade_end_correction)
+        self.current_results = pd.DataFrame(results)
         self.df_results = pd.concat([self.df_results, pd.DataFrame(results)])
         self.df_results.to_csv(self.root+"/BEM_results.dat", index=False)
         return None

@@ -7,10 +7,11 @@ helper = Helper()
 
 # Choose whicht parts of the code to run 
 do = {
-    "different_tsr": True,
+    "different_tsr": False,
     "plots": False,
     "c": False,
-    "task5": False
+    "task5": False,
+    "test": True
 }
 
 bem = BEM(data_root="../data",
@@ -32,3 +33,33 @@ if do["plots"]:
 
 if do["c"]:
     pass
+
+if do["test"]:
+    # This is a test/ example for using the bem function and using the outputs 
+    # the object property "current_results" is a pandas dataframe with the results from the last / current computation
+    bem_test = BEM(data_root="../data",
+          file_airfoil="polar.xlsx")
+    bem_test.set_constants(rotor_radius=50, root_radius=50*0.2, n_blades=3, air_density=1.225)
+    # Calculation
+    bem_test.solve_TUD(wind_speed=10, tip_speed_ratio=8, pitch=-2)
+    fig, axs = plt.subplots(4,1)
+    axs[0].plot(bem_test.current_results.r_inner, bem_test.current_results.a)
+    axs[1].plot(bem_test.current_results.r_inner, bem_test.current_results.a_prime)
+    axs[2].plot(bem_test.current_results.r_inner, bem_test.current_results.alpha)
+    axs[3].plot(bem_test.current_results.r_inner, bem_test.current_results.end_correction)
+    
+    ##### Make plot look a bit nicer
+    axs[0].set_xlabel("Radial position of the center point[m]")
+    axs[1].set_xlabel("Radial position of the center point[m]")
+    axs[2].set_xlabel("Radial position of the center point[m]")
+    axs[3].set_xlabel("Radial position of the center point[m]")
+
+    axs[0].set_ylabel("Induction []")
+    axs[1].set_ylabel("Induction []")
+    axs[2].set_ylabel(r"$\alpha$")
+    axs[3].set_ylabel("Tip loss factor []")
+    plt.show()
+    print("Done testing")
+
+
+
