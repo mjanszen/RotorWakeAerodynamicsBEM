@@ -68,14 +68,13 @@ class BEM:
             "a_prime": list(),      # Tangential induction factor
             "f_n": list(),          # Forces normal to the rotor plane in N/m
             "f_t": list(),          # Forces tangential in the rotor plane in N/m
-            "bec": list(),          # blade end correction (depending on 'tip' and 'root')
             "C_T": list(),          # thrust coefficient
             "alpha": list(),        # angle of attack
             "circulation": list(),  # magnitude of the circulation using Kutta-Joukowski
             "v0": list(),           # flow velocity normal to rotor plane
             "tsr": list(),          # tip speed ratio
-            "pitch": list(),         # pitch in degree
-            "end_correction": list()# Prandtl tip and root loss factor
+            "pitch": list(),        # pitch in degree
+            "end_correction": list()# blade end correction (depending on 'tip' and 'root')
         }
         # delete data with same wind speed, tip speed ratio and pitch angle.
         try:
@@ -148,9 +147,6 @@ class BEM:
             results["a_prime"].append(a_prime)
             results["f_n"].append(self._aero_force(inflow_velocity=inflow_speed, chord=chord, force_coefficient=c_n))
             results["f_t"].append(self._aero_force(inflow_velocity=inflow_speed, chord=chord, force_coefficient=c_t))
-            results["bec"].append(self._blade_end_correction(which="tud", tip=tip_loss_correction,
-                                                             root=root_loss_correction, radius=r_centre,
-                                                             tip_seed_ratio=tip_speed_ratio, a=a))
             results["C_T"].append(self._C_T(a))
             results["alpha"].append(alpha)
             results["circulation"].append(1/2*inflow_speed*c_l*chord)
