@@ -237,6 +237,7 @@ class BEM:
 
         #for r_inside, r_outside in zip(radii[:-1], radii[1:]):      # Take the left and right radius of every element
         iter = 0
+
         chord_estimate = 4.8
         twist_estimate = 0.15
         for r_inside, r_outside in zip(radii_left[:-1], radii_right[1:]):      # Take the left and right radius of every element
@@ -292,14 +293,16 @@ class BEM:
                                                                        tip_seed_ratio=tip_speed_ratio, university="tud")
                     return f_tangential, alpha , a ,a_prime, converged, blade_end_correction  # output the tangential force
                 except:
-                    return np.nan, np.nan, 0, 0 , false
+                    return np.nan, np.nan, 0, 0 , True
             # Brute force through it ! 
             #chord_estimate = 4.8
             #twist_estimate = 0.15
             #chord_range = np.linspace(chord_estimate*0.5, chord_estimate*1.5,40)
             #twist_range = np.linspace(twist_estimate * 0.5, twist_estimate *1.5, 40) #np.deg2rad(np.linspace(7.4,11.4,100))
-            chord_range = np.arange(chord_estimate*0.8, chord_estimate*1.2,0.05) # 5cm steps should be alright resolution
-            twist_range = np.arange(twist_estimate * 0.8, twist_estimate *1.2, np.deg2rad(1)) #np.deg2rad(np.linspace(7.4,11.4,100)) # 1 degree steps
+            c_l_opt = 1.1
+            chord_estimate = self._calc_optimum_chord(r_centre,self.rotor_radius,self.n_blades,c_l_opt,tip_speed_ratio)
+            chord_range = np.arange(chord_estimate*0.5, chord_estimate*1.5,0.05) # 5cm steps should be alright resolution
+            twist_range = np.arange(twist_estimate * 0.5, twist_estimate *1.5, np.deg2rad(1)) #np.deg2rad(np.linspace(7.4,11.4,100)) # 1 degree steps
             #chord_range = [2,3,4,5]
             #twist_range = [0.13,0.14,0.15, 0.16]
             ft_array =np.empty((len(chord_range), len(twist_range))) # initialize chord x twist array
@@ -319,6 +322,8 @@ class BEM:
             
             #import matplotlib.pyplot as plt
             #plt.contourf(np.rad2deg(twist_range), chord_range,ft_array,20)
+            #plt.xlabel("Twist [deg]")
+            #plt.ylabel("Chord [m]")
             #plt.show()
             
             #initial_guess = 5
