@@ -58,16 +58,20 @@ if do["test"]:
     axs[3].plot(bem_test.current_results.r_inner, bem_test.current_results.end_correction)
     
     ##### Make plot look a bit nicer
-    axs[0].set_xlabel("Radial position of the center point[m]")
-    axs[1].set_xlabel("Radial position of the center point[m]")
-    axs[2].set_xlabel("Radial position of the center point[m]")
-    axs[3].set_xlabel("Radial position of the center point[m]")
+    # the following three lines do the same (and slightly more) as the commented lines below them.
+    helper.handle_axis(axs, x_label="Radial position of the blade element centres (m)", grid=True,
+                       y_label=["Induction (-)", "Induction (-)", r"$\alpha$", "Blade end correction loss (-)"])
+    helper.handle_figure(fig, size=(5,7), show=True)
+    # axs[0].set_xlabel("Radial position of the center point[m]")
+    # axs[1].set_xlabel("Radial position of the center point[m]")
+    # axs[2].set_xlabel("Radial position of the center point[m]")
+    # axs[3].set_xlabel("Radial position of the center point[m]")
 
-    axs[0].set_ylabel("Induction []")
-    axs[1].set_ylabel("Induction []")
-    axs[2].set_ylabel(r"$\alpha$")
-    axs[3].set_ylabel("Tip loss factor []")
-    plt.show()
+    # axs[0].set_ylabel("Induction []")
+    # axs[1].set_ylabel("Induction []")
+    # axs[2].set_ylabel(r"$\alpha$")
+    # axs[3].set_ylabel("Tip loss factor []")
+    # plt.show()
     print("Done testing")
 
 
