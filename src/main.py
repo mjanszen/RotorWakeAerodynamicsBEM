@@ -3,8 +3,6 @@ import numpy as np
 from helper_functions import Helper
 import matplotlib.pyplot as plt
 from task5 import task5
-from task7 import task7
-from task10 import task10
 helper = Helper()
 
 # Choose whicht parts of the code to run 
@@ -13,9 +11,7 @@ do = {
     "plots": False,
     "c": False,
     "task5": False,
-    "task7": False,
-    "task10": True,
-    "test": False
+    "test": True
 }
 
 bem = BEM(data_root="../data",
@@ -32,16 +28,6 @@ if do["different_tsr"]:
 if do["task5"]:
     task5()
 
-if do["task7"]:
-    #bem.optimize_TUD(wind_speed=10, tip_speed_ratio=6, pitch=-2)
-    task7()
-    pass
-
-if do["task10"]:
-    # Plot circulation for TSR = 6,8,10
-    task10()
-    pass
-
 if do["plots"]:
     pass
 
@@ -56,7 +42,6 @@ if do["test"]:
     bem_test.set_constants(rotor_radius=50, root_radius=50*0.2, n_blades=3, air_density=1.225)
     # Calculation
     bem_test.solve_TUD(wind_speed=10, tip_speed_ratio=8, pitch=-2)
-    breakpoint()
     fig, axs = plt.subplots(4,1)
     axs[0].plot(bem_test.current_results.r_inner, bem_test.current_results.a)
     axs[1].plot(bem_test.current_results.r_inner, bem_test.current_results.a_prime)
