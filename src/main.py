@@ -4,6 +4,7 @@ from helper_functions import Helper
 import matplotlib.pyplot as plt
 from task5 import task5
 from task7 import task7
+from task10 import task10
 helper = Helper()
 
 # Choose whicht parts of the code to run 
@@ -13,6 +14,7 @@ do = {
     "c": False,
     "task5": False,
     "task7": False,
+    "task10": True,
     "test": False
 }
 
@@ -35,6 +37,10 @@ if do["task7"]:
     task7()
     pass
 
+if do["task10"]:
+    # Plot circulation for TSR = 6,8,10
+    task10()
+    pass
 
 if do["plots"]:
     pass
