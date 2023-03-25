@@ -99,7 +99,9 @@ class BEM:
             "circulation": list(),  # magnitude of the circulation using Kutta-Joukowski
             "end_correction": list(),# blade end correction (depending on 'tip' and 'root'),
             "c_l": list(),          # lift coefficient at radial position
-            "c_d": list()           # drag coefficient at radial position
+            "c_d": list(),          # drag coefficient at radial position
+            "phi": list(),          # inflow angle
+            "inflow_speed": list()  # inflow speed for airfoil
         }
 
         pitch = np.deg2rad(pitch)
@@ -117,13 +119,11 @@ class BEM:
             area_annulus = np.pi*(r_outside**2-r_inside**2)
             a, a_new, a_prime, converged = 1/3, 0, 0, False
             for i in range(max_iterations):
-                # get inflow angle
-                phi = self._phi(a=a, a_prime=a_prime, wind_speed=wind_speed, rotational_speed=omega, radius=r_centre)
+                # get inflow angle, and inflow speed for airfoil
+                phi, inflow_speed = self._flow(a=a, a_prime=a_prime, wind_speed=wind_speed, rotational_speed=omega, radius=r_centre)
                 # get combined lift and drag coefficient projected into the normal and tangential direction
                 _, _, _, c_n, c_t = self._phi_to_aero_values(phi=phi, twist=twist, pitch=pitch,
                                                              tip_seed_ratio=tip_speed_ratio, university="tud")
-                # get the inflow speed for the airfoil
-                inflow_speed = self._inflow_velocity(wind_speed, a, a_prime, omega, r_centre)
                 # get thrust force (in N) of the whole turbine at the current radius
                 thrust = self._aero_force(inflow_speed, chord, c_n)*self.n_blades*elem_length
                 # calculate thrust coefficient that results from the blade element
@@ -151,10 +151,10 @@ class BEM:
                 print(f"BEM did not converge for the blade element between {r_inside}m and {r_outside}m. Current "
                       f"change after {max_iterations}: {np.abs(a-a_new)}.")
             # Now that we have the converged axial induction factor, we can get the rest of the values
-            phi = self._phi(a=a, a_prime=a_prime, wind_speed=wind_speed, rotational_speed=omega, radius=r_centre)
+            phi, inflow_speed = self._flow(a=a, a_prime=a_prime, wind_speed=wind_speed, rotational_speed=omega,
+                                           radius=r_centre)
             alpha, c_l, c_d, c_n, c_t = self._phi_to_aero_values(phi=phi, twist=twist, pitch=pitch, radius=r_centre,
                                                                tip_seed_ratio=tip_speed_ratio, university="tud")
-            inflow_speed = self._inflow_velocity(wind_speed, a, a_prime, omega, r_centre)
 
             # Assemble the result output structure
             results["r_centre"].append(r_centre)
@@ -172,6 +172,8 @@ class BEM:
             results["end_correction"].append(blade_end_correction)
             results["c_l"].append(c_l)
             results["c_d"].append(c_d)
+            results["phi"].append(phi)
+            results["inflow_speed"].append(inflow_speed)
         self.current_results = pd.DataFrame(results)
         self.df_results = pd.concat([self.df_results, pd.DataFrame(identifier|results)])
         self.df_results.to_csv(self.root + "/BEM_results.dat", index=False)
@@ -695,11 +697,7 @@ class BEM:
         return n_blades*chord/(2*np.pi*radius)
 
     @staticmethod
-    def _inflow_velocity(wind_speed: float, a: float, a_prime: float, rotational_speed: float, radius: float):
-        return np.sqrt((wind_speed*(1-a))**2+(rotational_speed*radius*(1+a_prime))**2)
-
-    @staticmethod
-    def _phi(a: float, a_prime: float, wind_speed: float, rotational_speed: float, radius: float) -> float:
+    def _flow(a: float, a_prime: float, wind_speed: float, rotational_speed: float, radius: float) -> [float, float]:
         """
         Function to calculate the inflow angle based on the two induction factors, the inflow velocity, radius and
         angular_velocity
@@ -707,7 +705,9 @@ class BEM:
         :param a_prime:
         :return:
         """
-        return np.tan((1-a)*wind_speed/((1+a_prime)*rotational_speed*radius))
+        u_axial = wind_speed*(1-a)
+        u_tangential = rotational_speed*radius*(1+a_prime)
+        return np.tan(u_axial/u_tangential), np.sqrt(u_axial**2+u_tangential**2)
 
     @staticmethod
     def _get_twist(r, r_max):
