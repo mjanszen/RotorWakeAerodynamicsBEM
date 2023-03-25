@@ -59,8 +59,8 @@ def task10():
                 label=f'tsr:{tsr}')
 
     ax.set_title('Non-dimensionalized circulation distribution')
-    ax.set_xlabel(r'$r/R$')
-    ax.set_ylabel(r'$\frac{\Gamma }{(\pi U_{\infty}^2 / \Omega B)}$')
+    ax.set_xlabel(r'$r/R$ (-)')
+    ax.set_ylabel(r'$\frac{\Gamma }{(\pi U_{\infty}^2 / \Omega B)}$  (-)')
     ax.grid()
     ax.legend()
     plt.show()
