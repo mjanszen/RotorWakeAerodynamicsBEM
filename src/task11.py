@@ -34,16 +34,16 @@ def plot_polar(df):
     axs[2].plot(df.alpha, df.cl / df.cd)
 
     axs[0].grid()
-    axs[0].set_xlabel(r"Angle of attack $\alpha$ [°]")
-    axs[0].set_ylabel(r"Lift coefficient $C_l$ [ ]")
+    axs[0].set_xlabel(r"Angle of attack $\alpha$ (deg)")
+    axs[0].set_ylabel(r"Lift coefficient $C_l$ (-)")
 
     axs[1].grid()
-    axs[1].set_xlabel(r"Angle of attack $\alpha$ [°]")
-    axs[1].set_ylabel(r"Drag coefficient $C_l$ [ ]")
+    axs[1].set_xlabel(r"Angle of attack $\alpha$ (deg)")
+    axs[1].set_ylabel(r"Drag coefficient $C_l$ (-)")
 
     axs[2].grid()
-    axs[2].set_xlabel(r"Angle of attack $\alpha$ [°]")
-    axs[2].set_ylabel("Ratio of lift and drag coefficients \n" + r"$C_l / C_d$ [ ]")
+    axs[2].set_xlabel(r"Angle of attack $\alpha$ (deg)")
+    axs[2].set_ylabel("Ratio of lift and drag coefficients \n" + r"$C_l / C_d$ (-)")
 
     maxid = df.idxmax()
 
@@ -70,6 +70,7 @@ def task11():
     ## Plot actual data from BEM results
     BEMresults_file = '../data/BEM_results.dat'
     df_BEM = pd.read_csv(BEMresults_file, delimiter=',')
+    check_TSR = 6
 
     tsr_list = [6, 8, 10]
     fig, ax = plt.subplots(1, 3, figsize=[14, 6])
@@ -77,7 +78,7 @@ def task11():
         df_iter = df_BEM.loc[(df_BEM['tsr'] == tsr) & ~(df_BEM['end_correction'] == 1)]
 
         # CHECK TSR = 6 Conditions : Start
-        if tsr == 6:
+        if tsr == check_TSR:
             print(f'\nChecking operational conditions @ tsr={tsr}')
 
             # Find index of max AoA for tsr = 6
@@ -100,20 +101,20 @@ def task11():
 
     ax[0].plot(df_iter['r_centre'] / 50, df_iter.shape[0] * [AoA_opt], '--', label='AoA opt.')
     ax[0].set_title(r'AoA distribution along the blade')
-    ax[0].set_xlabel(r'$r/R$ [-]')
-    ax[0].set_ylabel(r'$AoA$ [deg]')
+    ax[0].set_xlabel(r'$r/R$ (-)')
+    ax[0].set_ylabel(r'$AoA$ (deg)')
     ax[0].grid()
     ax[0].legend()
 
     ax[1].set_title(r'Lift to Drag ratio along the blade')
-    ax[1].set_xlabel(r'$r/R$ [-]')
-    ax[1].set_ylabel(r'$c_l/c_d$ [-]')
+    ax[1].set_xlabel(r'$r/R$ (-)')
+    ax[1].set_ylabel(r'$c_l/c_d$ (-)')
     ax[1].grid()
     ax[1].legend()
 
     ax[2].set_title(r'Lift vs Chord')
-    ax[2].set_xlabel(r'Chord [m]')
-    ax[2].set_ylabel(r'$c_l$ [-]')
+    ax[2].set_xlabel(r'Chord (m)')
+    ax[2].set_ylabel(r'$c_l$ (-)')
     ax[2].grid()
     ax[2].legend()
     plt.show()
@@ -122,7 +123,6 @@ def task11():
     # breakpoint()
 
     print("Task 11 - Done")
-
 
 if __name__ == "__main__":
     task11()
