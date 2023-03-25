@@ -41,12 +41,21 @@ class BEM:
         self._set(**self.constants)
         return None
 
+    def get_results(self, tip_speed_ratio: float, wind_speed: float, pitch: float, rotor_radius=50,
+                    root_radius=0.2*50, n_blades=3, air_density=1.225, tip_loss_correction=True,
+                    root_loss_correction=True, resolution=200, start_radius=0.2*50):
+        if self.df_results.empty:
+            print("There are no results in the results file yet.")
+        else:
+            return self.df_results.query(order_to_query({param: value for param, value in locals().items() if
+                                                         param != "self"}))
+
     def solve_TUD(self,
                   wind_speed: float,
                   tip_speed_ratio: float,
                   pitch: float or np.ndarray,
                   start_radius: float = None,
-                  resolution: int = 300,
+                  resolution: int = 200,
                   max_convergence_error: float=1e-5,
                   max_iterations: int=200,
                   tip_loss_correction: bool=True,
