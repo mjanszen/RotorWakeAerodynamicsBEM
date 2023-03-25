@@ -3,6 +3,7 @@ from scipy.optimize import brentq, newton
 import pandas as pd
 import scipy.interpolate as interpolate
 from helper_functions import Helper
+from data_handling import *
 import scipy
 helper=Helper()
 
@@ -29,13 +30,15 @@ class BEM:
         self.implemented_tip_correction = ["none", "dtu", "tud"]
         self.implemented_root_correction = ["none", "tud"]
         self.blade_end_correction = 1
+        self.constants = None
 
     def set_constants(self,
                       rotor_radius: float,
                       root_radius: float,
                       n_blades: int,
                       air_density: float) -> None:
-        self._set(**{param: value for param, value in locals().items() if param != "self"})
+        self.constants = {param: value for param, value in locals().items() if param != "self"}
+        self._set(**self.constants)
         return None
 
     def solve_TUD(self,
@@ -43,7 +46,7 @@ class BEM:
                   tip_speed_ratio: float,
                   pitch: float or np.ndarray,
                   start_radius: float = None,
-                  resolution: int = 200,
+                  resolution: int = 300,
                   max_convergence_error: float=1e-5,
                   max_iterations: int=200,
                   tip_loss_correction: bool=True,
@@ -58,7 +61,20 @@ class BEM:
         :param resolution:
         :return:
         """
+        skip = ["skip", "self", "max_convergence_error", "max_iterations"]
         start_radius = start_radius if start_radius is not None else self.root_radius
+        # Set identifier for results
+        use_as_identifier = {param: value for param, value in (self.constants|locals()).items() if param not in skip}
+        identifier = {param: np.ones(resolution-1)*value for param, value in use_as_identifier.items()}
+        try:
+            if exists_already(self.df_results, **use_as_identifier):
+                print(f"BEM already done for {use_as_identifier}, skipping solve().")
+                return None
+        except Exception as exc:
+            if self.df_results.empty:
+                pass
+            elif exc == pd.core.computation.ops.UndefinedVariableError:
+                print("You probably added a parameter that does not exist in 'BEM_results.dat'. Go talk to Jonas.")
         # Initialise the result containers
         results = {
             "r_centre": list(),     # radius used for the calculations
@@ -71,25 +87,19 @@ class BEM:
             "C_T": list(),          # thrust coefficient
             "alpha": list(),        # angle of attack
             "circulation": list(),  # magnitude of the circulation using Kutta-Joukowski
-            "v0": list(),           # flow velocity normal to rotor plane
-            "tsr": list(),          # tip speed ratio
-            "pitch": list(),        # pitch in degree
             "end_correction": list()# blade end correction (depending on 'tip' and 'root')
         }
         # delete data with same wind speed, tip speed ratio and pitch angle.
-        try:
-            self.df_results = self.df_results.loc[~((self.df_results["tsr"]==tip_speed_ratio) &
-                                                    (self.df_results["v0"]==wind_speed) &
-                                                    (self.df_results["pitch"]==pitch))]
-        except KeyError:
-            pass
+        # try:
+        #     self.df_results = self.df_results.query(order_to_query(use_as_identifier, negate_order=True))
+        # except pd.core.computation.ops.UndefinedVariableError:
+        #     pass
         pitch = np.deg2rad(pitch)
         # Calculate the rotational speed
-        #breakpoint()
         omega = tip_speed_ratio*wind_speed/self.rotor_radius
         radii = np.linspace(start_radius, self.rotor_radius, resolution)
         # Loop along the span of the blade (blade sections)
-        print(f"Doing BEM for v0={wind_speed}, tsr={tip_speed_ratio}, pitch={pitch}")
+        print(f"Doing BEM for v0={wind_speed}, tsr={tip_speed_ratio}, pitch={np.rad2deg(pitch)}")
         for r_inside, r_outside in zip(radii[:-1], radii[1:]):      # Take the left and right radius of every element
             r_centre = (r_inside+r_outside)/2                       # representative radius in the middle of the section
             elem_length = r_outside-r_inside                        # length of elemen
@@ -150,12 +160,9 @@ class BEM:
             results["C_T"].append(self._C_T(a))
             results["alpha"].append(alpha)
             results["circulation"].append(1/2*inflow_speed*c_l*chord)
-            results["v0"].append(wind_speed)
-            results["tsr"].append(tip_speed_ratio)
-            results["pitch"].append(np.rad2deg(pitch))
             results["end_correction"].append(blade_end_correction)
         self.current_results = pd.DataFrame(results)
-        self.df_results = pd.concat([self.df_results, pd.DataFrame(results)])
+        self.df_results = pd.concat([self.df_results, pd.DataFrame(identifier|results)])
         self.df_results.to_csv(self.root+"/BEM_results.dat", index=False)
         return None
 
