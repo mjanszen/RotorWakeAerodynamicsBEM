@@ -5,18 +5,17 @@ import matplotlib.pyplot as plt
 from task5 import task5
 helper = Helper()
 
-# Choose whicht parts of the code to run 
+# Choose which parts of the code to run
 do = {
     "different_tsr": False,
     "plots": False,
     "c": False,
     "task5": False,
-    "test": True
+    "test": False
 }
 
 bem = BEM(data_root="../data",
           file_airfoil="polar.xlsx")
-
 
 if do["different_tsr"]:
     # Parameters
@@ -37,11 +36,7 @@ if do["c"]:
 if do["test"]:
     # This is a test/ example for using the bem function and using the outputs 
     # the object property "current_results" is a pandas dataframe with the results from the last / current computation
-    bem_test = BEM(data_root="../data",
-          file_airfoil="polar.xlsx")
-    bem_test.set_constants(rotor_radius=50, root_radius=50*0.2, n_blades=3, air_density=1.225)
-    # Calculation
-    bem_test.solve_TUD(wind_speed=10, tip_speed_ratio=8, pitch=-2)
+    bem_test = bem.get_results(wind_speed=10, tip_speed_ratio=8, pitch=-2)
     fig, axs = plt.subplots(4,1)
     axs[0].plot(bem_test.current_results.r_inner, bem_test.current_results.a)
     axs[1].plot(bem_test.current_results.r_inner, bem_test.current_results.a_prime)
