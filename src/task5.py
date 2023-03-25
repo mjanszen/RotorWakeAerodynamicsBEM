@@ -6,7 +6,7 @@ from helper_functions import Helper
 import matplotlib.pyplot as plt
 helper = Helper()
 
-# Choose whicht parts of the code to run 
+# Choose which parts of the code to run 
 def task5():
     print("Task 5: Start")
 
@@ -40,20 +40,20 @@ def task5():
     #### Grab data that we want
 
 
-    #breakpoint()
 
     #### Plots
 
 
     ## Plot for the tip loss correction factors
     fig, axs = plt.subplots(1,1, figsize=[6,4])
-    axs.plot(bem_tsr6.df_results.r_centre.iloc[-resolution+1:],bem_tsr6.df_results.end_correction.iloc[-resolution+1:],label ="Tsr = 6")
-    axs.plot(bem_tsr8.df_results.r_centre.iloc[-resolution+1:],bem_tsr8.df_results.end_correction.iloc[-resolution+1:],label ="Tsr = 8")
-    axs.plot(bem_tsr10.df_results.r_centre.iloc[-resolution+1:],bem_tsr10.df_results.end_correction.iloc[-resolution+1:],label ="Tsr = 10")
+    axs.plot(bem_tsr6.current_results.r_centre/50,bem_tsr6.current_results.end_correction,label ="Tsr = 6")
+    axs.plot(bem_tsr8.current_results.r_centre/50,bem_tsr8.current_results.end_correction,label ="Tsr = 8")
+    axs.plot(bem_tsr10.current_results.r_centre/50,bem_tsr10.current_results.end_correction,label ="Tsr = 10")
     axs.legend()
-    axs.set_xlabel("Radial position [m]")
-    axs.set_ylabel("Tip and root loss correction factor []")
+    axs.set_xlabel("radial position $\mu$ (-)")
+    axs.set_ylabel("tip and root loss correction factor $f$ (-)")
     axs.grid()
+    plt.tight_layout()
     #plt.show()
     fig.savefig("../results/tip_root_loss.png",bbox_inches="tight")
 
@@ -61,16 +61,51 @@ def task5():
     # Plot to show the difference of adding the tip loss
     fig2, axs2 = plt.subplots(1,1, figsize=[6,4])
     
-    axs2.plot(bem_tsr8.df_results.r_centre.iloc[-resolution+1:],bem_tsr8.df_results.a.iloc[-resolution+1:],label ="prandtl corrected")
-    axs2.plot(bem_tsr8_no_tip_loss.df_results.r_centre.iloc[-resolution+1:],bem_tsr8_no_tip_loss.df_results.a.iloc[-resolution+1:],label ="no correction")
+    axs2.plot(bem_tsr8.current_results.r_centre/50,bem_tsr8.current_results.a,label ="prandtl corrected")
+    axs2.plot(bem_tsr8_no_tip_loss.current_results.r_centre/50,bem_tsr8_no_tip_loss.current_results.a,label ="no correction")
     
     axs2.legend()
-    axs2.set_xlabel("Radial position [m]")
-    axs2.set_ylabel(r"Axial induciton factor $a$ []")
+    axs2.set_xlabel("radial position $\mu$ (-)")
+    axs2.set_ylabel(r"axial inducton factor $a$ (-)")
     axs2.grid()
-    plt.show()
+    plt.tight_layout()
     fig2.savefig("../results/tip_root_loss_induction.png",bbox_inches="tight")
+
+    # Loads
+
+    # Plot to show the difference of adding the tip loss
+    fig3, axs3 = plt.subplots(1,2, figsize=[6,4])
     
+    axs3[0].plot(bem_tsr8.current_results.r_centre/50,bem_tsr8.current_results.f_t,label ="prandtl corrected")
+    axs3[0].plot(bem_tsr8_no_tip_loss.current_results.r_centre/50,bem_tsr8_no_tip_loss.current_results.f_t,label ="no correction")
+    axs3[1].plot(bem_tsr8.current_results.r_centre/50,bem_tsr8.current_results.f_n,label ="prandtl corrected")
+    axs3[1].plot(bem_tsr8_no_tip_loss.current_results.r_centre/50,bem_tsr8_no_tip_loss.current_results.f_n,label ="no correction")
+    axs3[0].legend()
+    axs3[1].legend()
+    axs3[0].set_xlabel("radial position $\mu$ (-)")
+    axs3[0].set_ylabel(r"tangential loads (N/m)")
+    axs3[1].set_xlabel("radial position $\mu$ (-)")
+    axs3[1].set_ylabel(r"normal loads  $(N/m)$")
+    axs3[0].grid()
+    axs3[1].grid()
+    plt.tight_layout()
+
+    fig3.savefig("../results/task5_loads.png",bbox_inches="tight")
+
+
+    # Plot to show the difference of adding the tip loss
+    fig4, axs4 = plt.subplots(1,1, figsize=[6,4])
+    
+    axs4.plot(bem_tsr8.current_results.r_centre/50,bem_tsr8.current_results.alpha,label ="prandtl corrected")
+    axs4.plot(bem_tsr8_no_tip_loss.current_results.r_centre/50,bem_tsr8_no_tip_loss.current_results.alpha,label ="no correction")
+    
+    axs4.legend()
+    axs4.set_xlabel("radial position $\mu$ (-)")
+    axs4.set_ylabel(r"angle of attack $\alpha$ (-)")
+    axs4.grid()
+    plt.tight_layout()
+    fig4.savefig("../results/task5_tip_root_loss_aoa.png",bbox_inches="tight")
+    plt.show()
     # Final stuff
     print("Task 5: Done")
 

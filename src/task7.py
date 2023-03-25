@@ -22,7 +22,7 @@ def task7():
               file_airfoil="polar.xlsx")
 
     bem.set_constants(rotor_radius=50, root_radius=50*0.2, n_blades=3, air_density=1.225)
-    bem.optimize_TUD(wind_speed=10, tip_speed_ratio=6, pitch=-2)
+    bem.optimize_TUD2(wind_speed=10, tip_speed_ratio=6, pitch=-2)
     
 
 if __name__=="__main__":
