@@ -34,16 +34,16 @@ def plot_polar(df):
     axs[2].plot(df.alpha, df.cl / df.cd)
 
     axs[0].grid()
-    axs[0].set_xlabel(r"Angle of attack $\alpha$ (deg)")
-    axs[0].set_ylabel(r"Lift coefficient $C_l$ (-)")
+    axs[0].set_xlabel(r"$\alpha$ ($^\circ$)")
+    axs[0].set_ylabel(r"$C_l$ (-)")
 
     axs[1].grid()
-    axs[1].set_xlabel(r"Angle of attack $\alpha$ (deg)")
-    axs[1].set_ylabel(r"Drag coefficient $C_l$ (-)")
+    axs[1].set_xlabel(r"$\alpha$ ($^\circ$)")
+    axs[1].set_ylabel(r"$C_d$ (-)")
 
     axs[2].grid()
-    axs[2].set_xlabel(r"Angle of attack $\alpha$ (deg)")
-    axs[2].set_ylabel("Ratio of lift and drag coefficients \n" + r"$C_l / C_d$ (-)")
+    axs[2].set_xlabel(r"$\alpha$ ($^\circ$)")
+    axs[2].set_ylabel("$C_l / C_d$ (-)")
 
     maxid = df.idxmax()
 
@@ -53,6 +53,7 @@ def plot_polar(df):
 
     plt.show()
     fig.savefig("../results/t11_polars.png", bbox_inches="tight")
+    breakpoint()
 
 
 def task11():

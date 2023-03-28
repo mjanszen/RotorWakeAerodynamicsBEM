@@ -101,7 +101,7 @@ def task5():
     
     axs4.legend()
     axs4.set_xlabel("radial position $\mu$ (-)")
-    axs4.set_ylabel(r"angle of attack $\alpha$ (-)")
+    axs4.set_ylabel(r"angle of attack $\alpha$ ($^\circ$)")
     axs4.grid()
     plt.tight_layout()
     fig4.savefig("../results/task5_tip_root_loss_aoa.png",bbox_inches="tight")
