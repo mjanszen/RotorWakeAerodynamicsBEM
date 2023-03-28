@@ -58,10 +58,10 @@ def task7_plot():
     fig, axs = plt.subplots(2,1, figsize=(6,4))
 
     axs[0].plot(radii, chord, label="optimised") 
-    axs[1].plot(radii, twist, label="optimised") 
+    axs[1].plot(radii, np.rad2deg(twist), label="optimised") 
 
     axs[0].plot(radii, chord_list, label="reference design") 
-    axs[1].plot(radii, twist_list, label="reference design") 
+    axs[1].plot(radii, np.rad2deg(twist_list), label="reference design") 
     
     axs[0].grid()
     #axs[0].set_xlabel("$\mu$ (-)")
@@ -70,7 +70,7 @@ def task7_plot():
 
     axs[1].grid()
     axs[1].set_xlabel("$\mu$ (-)")
-    axs[1].set_ylabel("twist $(radian)$")
+    axs[1].set_ylabel("twist $(^\circ)$")
     axs[1].legend()
     plt.savefig("../results/optimum_chordtwist.png",bbox_inches='tight')
     plt.show()
