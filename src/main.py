@@ -4,14 +4,18 @@ from helper_functions import Helper
 import matplotlib.pyplot as plt
 from task5 import task5
 helper = Helper()
+from task0 import task0
+from task9 import task9
 
 # Choose which parts of the code to run
 do = {
-    "different_tsr": False,
+    "different_tsr": True,
     "plots": False,
     "c": False,
     "task5": False,
-    "test": False
+    "test": False,
+    "task0": False,
+    "task9": True
 }
 
 bem = BEM(data_root="../data",
@@ -60,5 +64,10 @@ if do["test"]:
     # plt.show()
     print("Done testing")
 
-
+if do["task0"]:
+    tsr = [6,8,10]
+    task0(tsr)
+if do["task9"]:
+    tsr = [6,8,10]
+    task9(tsr)
 

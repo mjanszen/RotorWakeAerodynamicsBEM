@@ -2,16 +2,15 @@
 
 from BEM import BEM
 import numpy as np
-from helper_functions import Helper
 import matplotlib.pyplot as plt
-helper = Helper()
 
+bem = BEM(data_root="../data", file_airfoil="polar.xlsx")
 
 def get_reynolds(U,L,nu):
     """
     Reynolds number calculation
     """
-    return np.divide( U*L,nu) 
+    return np.divide(U*L,nu) 
 
 def get_velocity(r,rmax,tsr,u_0):
     """
@@ -29,48 +28,43 @@ def get_chord(r, r_max):
     """
     return 3*(1-r/r_max)+1
 
-def task0():
-    nu = 1.5 * 10**-5
-    u_0 = 10
-    inner_radius = 10
-    outer_radius = 50
-    tsr_range = [6,8,10]
-    radii = np.linspace(inner_radius, outer_radius,200) 
-    #chords = [1] * len(radii) # np.ones((len(radii),1),) #
-    chords = [get_chord(r,outer_radius) for r in radii]
-    breakpoint()
-
-    u_6 = get_velocity(radii, outer_radius,tsr_range[0],u_0)
-    re_6 = get_reynolds(u_6,chords,nu)
-    u_8 = get_velocity(radii, outer_radius,tsr_range[1],u_0)
-    re_8 = get_reynolds(u_8,chords,nu)
-    u_10 = get_velocity(radii, outer_radius,tsr_range[2],u_0)
-    re_10 = get_reynolds(u_10,chords,nu)
-
-    #plt.plot(radii, re_6)
-    fig, axs = plt.subplots(3,1) 
-    axs[0].plot(radii, chords)
-    axs[1].plot(radii, u_6)
-    axs[1].plot(radii, u_8)
-    axs[1].plot(radii, u_10)
-    axs[2].plot(radii, u_6*chords /nu)
-    axs[2].plot(radii, u_8*chords /nu)
-    axs[2].plot(radii, u_10*chords /nu)
+def task0(tsr):
+    fig, axs = plt.subplots(3,1, sharex=True) 
+    linestyle=['-.',':',"--"]
+    for tsr in tsr:
+        bem_results = bem.get_results(wind_speed=10, tip_speed_ratio=tsr, pitch=-2)
+        U = bem_results["inflow_speed"].to_numpy()
+        radii = bem_results["r_centre"].to_numpy()
+        nu = 1.5 * 10**-5
+        inner_radius = 10
+        outer_radius = 50
+        # tsr_range = [6,8,10]
+        #chords = [1] * len(radii) # np.ones((len(radii),1),) #
+        chords = [get_chord(r,outer_radius) for r in radii]
+        Re = get_reynolds(U, chords, nu)
     
-    axs[2].set_xlabel("Radial position [m]")
-    axs[0].set_ylabel("Chord [m]")
-    axs[1].set_ylabel("V [m/s]")
-    axs[2].set_ylabel("Reynolds number []")
-    axs[0].grid()
-    axs[1].grid()
-    axs[2].grid()
-    #plt.show()
-    plt.savefig("../results/reynolds_number.png",bbox_inches="tight")
+      
+        axs[0].plot(radii/outer_radius, chords, label = f"$\lambda$ = {tsr}")
+        axs[1].plot(radii/outer_radius, U)
+        axs[2].plot(radii/outer_radius, Re)
+        
+        axs[2].set_xlabel(r"$\mu (-)$")
+        axs[0].set_ylabel("Chord (m)")
+        axs[1].set_ylabel("Velocity (m/s)")
+        axs[2].set_ylabel("Reynolds number (-)")
+        axs[0].grid()
+        axs[1].grid()
+        axs[2].grid()
+        axs[0].yaxis.set_label_coords(-0.1,0.5)
+        axs[1].yaxis.set_label_coords(-0.1,0.5)
+        axs[2].yaxis.set_label_coords(-0.1,0.5)
+        #plt.show()
+    fig.legend(bbox_to_anchor=[1.1, 0.57])
+    fig.savefig("../results/reynolds_number.png",bbox_inches="tight")
 
     
 
     
-
 
 
 
