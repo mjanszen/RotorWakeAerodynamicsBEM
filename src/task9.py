@@ -57,14 +57,15 @@ def task9(tsr_list):
             
         # Point A
     
-        figa.suptitle("Velocity, Static Pressure and Specific Enthalpy (Point A)")
-        axa[n,0].plot(v0, r_a/r_outer[-1], linewidth =2, label = f"$\lambda$ = {tsr}", color = color[n], linestyle=linestyle[n])
+        figa.suptitle("Dynamic, Static and Stagnation Pressure (Point A)")
+        axa[n,0].plot(p_dynamic_a, r_a/r_outer[-1], linewidth =2, label = f"$\lambda$ = {tsr}", color = color[n], linestyle=linestyle[n])
         axa[n,1].plot(p_static_a, r_a/r_outer[-1], linewidth =2, color = color[n], linestyle=linestyle[n])
-        axa[n,2].plot(h_a, r_a/r_outer[-1], linewidth =2,  color = color[n], linestyle=linestyle[n])
+        axa[n,2].plot(p_stagnation_a, r_a/r_outer[-1], linewidth =2,  color = color[n], linestyle=linestyle[n])
         axa[n,0].set(ylabel = f"$\lambda$ = {tsr}\n$\mu$ (-)")
-        axa[len(tsr_list)-1,0].set(xlabel = "Velocity (m/s)")
+        axa[len(tsr_list)-1,0].set(xlabel = r"Dynamic Pressure ($N/m^2$)")
         axa[len(tsr_list)-1,1].set(xlabel = r"Static Pressure ($N/m^2$)")
-        axa[len(tsr_list)-1,2].set(xlabel = r" Specific Enthalpy (J/kg)")
+        axa[len(tsr_list)-1,2].set(xlabel = r"Stagnation Pressure ($N/m^2$)")
+        axa[n,0].set_ylim(bottom = 0.175)
         axa[n,0].grid(), axa[n,1].grid(), axa[n,2].grid()
     
     
@@ -77,14 +78,15 @@ def task9(tsr_list):
         h_b = h_a
         
     
-        figb.suptitle("Velocity, Static Pressure and Specific Enthalpy (Point B)")
-        axb[n,0].plot(U_b, r_b/r_outer[-1], linewidth =2, label = f"$\lambda$ = {tsr}", color = color[n], linestyle=linestyle[n])
+        figb.suptitle("Dynamic, Static and Stagnation Pressure (Point B)")
+        axb[n,0].plot(p_dynamic_b, r_b/r_outer[-1], linewidth =2, label = f"$\lambda$ = {tsr}", color = color[n], linestyle=linestyle[n])
         axb[n,1].plot(p_static_b, r_b/r_outer[-1], linewidth =2, color = color[n], linestyle=linestyle[n])
-        axb[n,2].plot(h_b, r_b/r_outer[-1], linewidth =2,  color = color[n], linestyle=linestyle[n])
+        axb[n,2].plot(p_stagnation_b, r_b/r_outer[-1], linewidth =2,  color = color[n], linestyle=linestyle[n])
         axb[n,0].set(ylabel = f"$\lambda$ = {tsr}\n$\mu$ (-)")
-        axb[len(tsr_list)-1,0].set(xlabel = "Velocity (m/s)")
+        axb[len(tsr_list)-1,0].set(xlabel = r"Dynamic Pressure ($N/m^2$)")
         axb[len(tsr_list)-1,1].set(xlabel = r"Static Pressure ($N/m^2$)")
-        axb[len(tsr_list)-1,2].set(xlabel = r" Specific Enthalpy (J/kg)")
+        axb[len(tsr_list)-1,2].set(xlabel = r"Stagnation Pressure ($N/m^2$)")
+        axb[n,0].set_ylim(bottom = 0.175)
         axb[n,0].grid(), axb[n,1].grid(), axb[n,2].grid()
         axb[n,1].ticklabel_format(useOffset=False)
         axb[n,1].xaxis.set_ticks(np.linspace(np.round(min(p_static_b)), np.round(max(p_static_b)), 4))
@@ -98,18 +100,20 @@ def task9(tsr_list):
         p_stagnation_c = p_static_c + p_dynamic_c
     
     
-        figc.suptitle("Velocity, Static Pressure and Specific Enthalpy (Point C)")
-        axc[n,0].plot(U_c, r_b/r_outer[-1], linewidth =2, label = f"$\lambda$ = {tsr}", color = color[n], linestyle=linestyle[n])
+        figc.suptitle("Dynamic, Static and Stagnation Pressure (Point C)")
+        axc[n,0].plot(p_dynamic_c, r_b/r_outer[-1], linewidth =2, label = f"$\lambda$ = {tsr}", color = color[n], linestyle=linestyle[n])
         axc[n,1].plot(p_static_c, r_b/r_outer[-1], linewidth =2, color = color[n], linestyle=linestyle[n])
-        axc[n,2].plot(h_c, r_b/r_outer[-1], linewidth =2,  color = color[n], linestyle=linestyle[n])
+        axc[n,2].plot(p_stagnation_c, r_b/r_outer[-1], linewidth =2,  color = color[n], linestyle=linestyle[n])
         axc[n,0].set(ylabel = f"$\lambda$ = {tsr}\n$\mu$ (-)")
-        axc[len(tsr_list)-1,0].set(xlabel = "Velocity (m/s)")
+        axc[len(tsr_list)-1,0].set(xlabel = r"Dynamic Pressure ($N/m^2$)")
         axc[len(tsr_list)-1,1].set(xlabel = r"Static Pressure ($N/m^2$)")
-        axc[len(tsr_list)-1,2].set(xlabel = r" Specific Enthalpy (J/kg)")
+        axc[len(tsr_list)-1,2].set(xlabel = r"Stagnation Pressure ($N/m^2$)")
         axc[n,0].grid(), axc[n,1].grid(), axc[n,2].grid()
-        
+        axc[n,0].set_ylim(bottom = 0.175)
         axc[n,1].ticklabel_format(useOffset=False)
         axc[n,1].xaxis.set_ticks(np.linspace(np.round(min(p_static_c)), np.round(max(p_static_c)), 5))
+        axc[n,2].ticklabel_format(useOffset=False)
+        axc[n,2].xaxis.set_ticks(np.linspace(np.round(min(p_stagnation_c)), np.round(max(p_stagnation_c)), 5))
     
     
         # Plot Point D
@@ -125,15 +129,19 @@ def task9(tsr_list):
         for i in np.arange(1,len(r_width_d)):
             r_d[i] = r_d[i-1] + r_width_d[i]
             
-        figd.suptitle("Velocity, Static Pressure and Specific Enthalpy (Point D)")
-        axd[n,0].plot(U_d, r_d/r_outer[-1], linewidth =2, label = f"$\lambda$ = {tsr}", color = color[n], linestyle=linestyle[n])
+        figd.suptitle("Dynamic, Static and Stagnation Pressure (Point D)")
+        axd[n,0].plot(p_dynamic_d, r_d/r_outer[-1], linewidth =2, label = f"$\lambda$ = {tsr}", color = color[n], linestyle=linestyle[n])
         axd[n,1].plot(p_static_d, r_d/r_outer[-1], linewidth =2, color = color[n], linestyle=linestyle[n])
-        axd[n,2].plot(h_d, r_d/r_outer[-1], linewidth =2,  color = color[n], linestyle=linestyle[n])
+        axd[n,2].plot(p_stagnation_d, r_d/r_outer[-1], linewidth =2,  color = color[n], linestyle=linestyle[n])
         axd[n,0].set(ylabel = f"$\lambda$ = {tsr}\n$\mu$ (-)")
-        axd[len(tsr_list)-1,0].set(xlabel = "V´elocity (m/s)")
+        axd[n,0].set_ylim(bottom = 0.175)
+        axd[len(tsr_list)-1,0].set(xlabel = r"Dynamic Pressure ($N/m^2$)")
         axd[len(tsr_list)-1,1].set(xlabel = r"Static Pressure ($N/m^2$)")
-        axd[len(tsr_list)-1,2].set(xlabel = r" Specific Enthalpy (J/kg)")
+        axd[len(tsr_list)-1,2].set(xlabel = r"Stagnation Pressure ($N/m^2$)")
         axd[n,0].grid(), axd[n,1].grid(), axd[n,2].grid()
+        
+        axd[n,2].ticklabel_format(useOffset=False)
+        axd[n,2].xaxis.set_ticks(np.linspace(np.round(min(p_stagnation_d)), np.round(max(p_stagnation_d)), 5))
     
     
     
